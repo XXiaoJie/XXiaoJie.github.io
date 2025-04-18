@@ -17,16 +17,16 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha256-dABdfBfUoC8vJUBOwGVdm8L9qlMWaHTIfXt+7GnZCIo=" crossorigin="anonymous">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
 
-<script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.23.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":false,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
+<script class="next-config" data-name="main" type="application/json">{"hostname":"xxiaojie.github.io","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.23.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":false,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
 
     <meta name="description" content="Hello，大家好，我是Xiaojie，好久不见，欢迎大家能够和Xiaojie一起学习毫米波雷达知识，Xiaojie准备连载一个系列的文章—DDMA信号处理以及数据处理的流程，本系列文章将从目标生成、信号仿真、测距、测速、cfar检测、测角、目标聚类、目标跟踪这几个模块逐步介绍，这个系列的文章大约是一个7-8篇左右。 最终效果如下： 本篇文章主要讲的是DDMA原理性的部分。 DDMA波形DDMA波">
 <meta property="og:type" content="article">
 <meta property="og:title" content="DDMA signal&amp;data Process(1)">
-<meta property="og:url" content="http://example.com/2025/04/17/DDMA%20signal&data%20Process/DDMA%20signal&data%20Process(1)/index.html">
+<meta property="og:url" content="https://xxiaojie.github.io/2025/04/17/DDMA%20signal&data%20Process/DDMA%20signal&data%20Process(1)/index.html">
 <meta property="og:site_name" content="xiaojie雷达说">
 <meta property="og:description" content="Hello，大家好，我是Xiaojie，好久不见，欢迎大家能够和Xiaojie一起学习毫米波雷达知识，Xiaojie准备连载一个系列的文章—DDMA信号处理以及数据处理的流程，本系列文章将从目标生成、信号仿真、测距、测速、cfar检测、测角、目标聚类、目标跟踪这几个模块逐步介绍，这个系列的文章大约是一个7-8篇左右。 最终效果如下： 本篇文章主要讲的是DDMA原理性的部分。 DDMA波形DDMA波">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://example.com/.com//1.gif">
+<meta property="og:image" content="https://xxiaojie.github.io/.com//1.gif">
 <meta property="og:image" content="https://files.mdnice.com/user/18303/c58d4f56-7f8c-4803-93db-83418bf35408.png">
 <meta property="og:image" content="https://files.mdnice.com/user/18303/d0823106-7f41-4cc4-b1a5-4e8b32c59942.png">
 <meta property="og:image" content="https://files.mdnice.com/user/18303/891ed095-6eff-4402-8cc8-3cdc9b9a3a49.png">
@@ -34,13 +34,13 @@
 <meta property="article:modified_time" content="2025-04-17T15:34:44.194Z">
 <meta property="article:author" content="xiaojie">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://example.com/.com//1.gif">
+<meta name="twitter:image" content="https://xxiaojie.github.io/.com//1.gif">
 
 
-<link rel="canonical" href="http://example.com/2025/04/17/DDMA%20signal&data%20Process/DDMA%20signal&data%20Process(1)/">
+<link rel="canonical" href="https://xxiaojie.github.io/2025/04/17/DDMA%20signal&data%20Process/DDMA%20signal&data%20Process(1)/">
 
 
-<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://example.com/2025/04/17/DDMA%20signal&data%20Process/DDMA%20signal&data%20Process(1)/","path":"2025/04/17/DDMA signal&data Process/DDMA signal&data Process(1)/","title":"DDMA signal&data Process(1)"}</script>
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://xxiaojie.github.io/2025/04/17/DDMA%20signal&data%20Process/DDMA%20signal&data%20Process(1)/","path":"2025/04/17/DDMA signal&data Process/DDMA signal&data Process(1)/","title":"DDMA signal&data Process(1)"}</script>
 
 <script class="next-config" data-name="calendar" type="application/json">""</script>
 <title>DDMA signal&data Process(1) | xiaojie雷达说</title>
@@ -148,7 +148,7 @@
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
         <a href="/archives/">
-          <span class="site-state-item-count">5</span>
+          <span class="site-state-item-count">6</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -184,7 +184,7 @@
   
 
   <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2025/04/17/DDMA%20signal&data%20Process/DDMA%20signal&data%20Process(1)/">
+    <link itemprop="mainEntityOfPage" href="https://xxiaojie.github.io/2025/04/17/DDMA%20signal&data%20Process/DDMA%20signal&data%20Process(1)/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/xiaojie.png">
@@ -304,7 +304,7 @@ chirp数量：384，
   </li>
   <li class="post-copyright-link">
       <strong>本文链接：</strong>
-      <a href="http://example.com/2025/04/17/DDMA%20signal&data%20Process/DDMA%20signal&data%20Process(1)/" title="DDMA signal&amp;data Process(1)">http://example.com/2025/04/17/DDMA signal&data Process/DDMA signal&data Process(1)/</a>
+      <a href="https://xxiaojie.github.io/2025/04/17/DDMA%20signal&data%20Process/DDMA%20signal&data%20Process(1)/" title="DDMA signal&amp;data Process(1)">https://xxiaojie.github.io/2025/04/17/DDMA signal&data Process/DDMA signal&data Process(1)/</a>
   </li>
   <li class="post-copyright-license">
       <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！

@@ -19,24 +19,31 @@
 
 <script class="next-config" data-name="main" type="application/json">{"hostname":"xxiaojie.github.io","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.23.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":false,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
 
-    <meta name="description" content="分享雷达知识">
-<meta property="og:type" content="website">
-<meta property="og:title" content="xiaojie雷达说">
-<meta property="og:url" content="https://xxiaojie.github.io/index.html">
+    <meta name="description" content="Hello，大家好，我是Xiaojie，好久不见，欢迎大家能够和Xiaojie一起学习毫米波雷达知识，Xiaojie准备连载一个系列的文章—DDMA信号处理以及数据处理的流程，本系列文章将从目标生成、信号仿真、测距、测速、cfar检测、测角、目标聚类、目标跟踪这几个模块逐步介绍，这个系列的文章大约是一个7-8篇左右。 最终效果如下：  本篇文章主要讲的是DDMA原理性的部分。 DDMA波形 DDM">
+<meta property="og:type" content="article">
+<meta property="og:title" content="DDMA signal&amp;data Process(1)">
+<meta property="og:url" content="https://xxiaojie.github.io/2025/04/17/radar/DDMA/DDMA%20signal&data%20Process(1)/index.html">
 <meta property="og:site_name" content="xiaojie雷达说">
-<meta property="og:description" content="分享雷达知识">
+<meta property="og:description" content="Hello，大家好，我是Xiaojie，好久不见，欢迎大家能够和Xiaojie一起学习毫米波雷达知识，Xiaojie准备连载一个系列的文章—DDMA信号处理以及数据处理的流程，本系列文章将从目标生成、信号仿真、测距、测速、cfar检测、测角、目标聚类、目标跟踪这几个模块逐步介绍，这个系列的文章大约是一个7-8篇左右。 最终效果如下：  本篇文章主要讲的是DDMA原理性的部分。 DDMA波形 DDM">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://xxiaojie.github.io/2025/04/17/radar/DDMA/DDMA%20signal&data%20Process(1)/1.gif">
+<meta property="og:image" content="https://xxiaojie.github.io/2025/04/17/radar/DDMA/DDMA%20signal&data%20Process(1)/2.png">
+<meta property="og:image" content="https://xxiaojie.github.io/2025/04/17/radar/DDMA/DDMA%20signal&data%20Process(1)/3.png">
+<meta property="og:image" content="https://xxiaojie.github.io/2025/04/17/radar/DDMA/DDMA%20signal&data%20Process(1)/4.png">
+<meta property="article:published_time" content="2025-04-17T15:19:14.000Z">
+<meta property="article:modified_time" content="2025-04-19T13:45:20.975Z">
 <meta property="article:author" content="xiaojie">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://xxiaojie.github.io/2025/04/17/radar/DDMA/DDMA%20signal&data%20Process(1)/1.gif">
 
 
-<link rel="canonical" href="https://xxiaojie.github.io/">
+<link rel="canonical" href="https://xxiaojie.github.io/2025/04/17/radar/DDMA/DDMA%20signal&data%20Process(1)/">
 
 
-<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":true,"isPost":false,"lang":"zh-CN","comments":"","permalink":"","path":"index.html","title":""}</script>
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://xxiaojie.github.io/2025/04/17/radar/DDMA/DDMA%20signal&data%20Process(1)/","path":"2025/04/17/radar/DDMA/DDMA signal&data Process(1)/","title":"DDMA signal&data Process(1)"}</script>
 
 <script class="next-config" data-name="calendar" type="application/json">""</script>
-<title>xiaojie雷达说</title>
+<title>DDMA signal&data Process(1) | xiaojie雷达说</title>
   
 
 
@@ -93,7 +100,7 @@
 
     <a href="/" class="brand" rel="start">
       <i class="logo-line"></i>
-      <h1 class="site-title">xiaojie雷达说</h1>
+      <p class="site-title">xiaojie雷达说</p>
       <i class="logo-line"></i>
     </a>
   </div>
@@ -119,7 +126,7 @@
   
   <aside class="sidebar">
 
-    <div class="sidebar-inner sidebar-overview-active">
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
       <ul class="sidebar-nav">
         <li class="sidebar-nav-toc">
           文章目录
@@ -132,6 +139,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#ddma%E6%B3%A2%E5%BD%A2"><span class="nav-number">1.</span> <span class="nav-text">DDMA波形</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ddma%E9%80%9F%E5%BA%A6%E8%A7%A3%E6%A8%A1%E7%B3%8A"><span class="nav-number">2.</span> <span class="nav-text">DDMA速度解模糊</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ddma%E4%BF%A1%E5%8F%B7%E4%BB%BF%E7%9C%9F"><span class="nav-number">3.</span> <span class="nav-text">DDMA信号仿真</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number"></span> <span class="nav-text">参考文献</span></a></div>
         </div>
         <!--/noindex-->
 
@@ -171,16 +179,17 @@
 
     </div>
 
-    <div class="main-inner index posts-expand">
+    <div class="main-inner post posts-expand">
 
-    
+
+  
 
 
 <div class="post-block">
   
   
 
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://xxiaojie.github.io/2025/04/17/radar/DDMA/DDMA%20signal&data%20Process(1)/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -194,13 +203,13 @@
     </span>
 
     <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content=" | xiaojie雷达说">
+      <meta itemprop="name" content="DDMA signal&amp;data Process(1) | xiaojie雷达说">
       <meta itemprop="description" content="">
     </span>
       <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2025/04/17/radar/DDMA/DDMA%20signal&data%20Process(1)/" class="post-title-link" itemprop="url">DDMA signal&data Process(1)</a>
-        </h2>
+        <h1 class="post-title" itemprop="name headline">
+          DDMA signal&data Process(1)
+        </h1>
 
         <div class="post-meta-container">
           <div class="post-meta">
@@ -234,6 +243,13 @@
     </span>
 
   
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
     <span class="post-meta-break"></span>
     <span class="post-meta-item" title="本文字数">
       <span class="post-meta-item-icon">
@@ -257,8 +273,7 @@
     
     
     
-    <div class="post-body" itemprop="articleBody">
-          <p>Hello，大家好，我是Xiaojie，好久不见，欢迎大家能够和Xiaojie一起学习毫米波雷达知识，Xiaojie准备连载一个系列的文章—DDMA信号处理以及数据处理的流程，本系列文章将从目标生成、信号仿真、测距、测速、cfar检测、测角、目标聚类、目标跟踪这几个模块逐步介绍，这个系列的文章大约是一个7-8篇左右。</p>
+    <div class="post-body" itemprop="articleBody"><p>Hello，大家好，我是Xiaojie，好久不见，欢迎大家能够和Xiaojie一起学习毫米波雷达知识，Xiaojie准备连载一个系列的文章—DDMA信号处理以及数据处理的流程，本系列文章将从目标生成、信号仿真、测距、测速、cfar检测、测角、目标聚类、目标跟踪这几个模块逐步介绍，这个系列的文章大约是一个7-8篇左右。</p>
 <p>最终效果如下：</p>
 <img src="/2025/04/17/radar/DDMA/DDMA%20signal&data%20Process(1)/1.gif" class="" title="放置图片">
 <p>本篇文章主要讲的是DDMA原理性的部分。</p>
@@ -295,7 +310,6 @@ chirp数量：384，
 </ol>
 <p><strong>至此，本片文章就此结束了。</strong></p>
 
-      
     </div>
 
     
@@ -303,11 +317,30 @@ chirp数量：384，
     
 
     <footer class="post-footer">
-        <div class="post-eof"></div>
-      
+          
+
+<div class="post-copyright">
+<ul>
+  <li class="post-copyright-author">
+      <strong>本文作者： </strong>xiaojie
+  </li>
+  <li class="post-copyright-link">
+      <strong>本文链接：</strong>
+      <a href="https://xxiaojie.github.io/2025/04/17/radar/DDMA/DDMA%20signal&data%20Process(1)/" title="DDMA signal&amp;data Process(1)">https://xxiaojie.github.io/2025/04/17/radar/DDMA/DDMA signal&data Process(1)/</a>
+  </li>
+  <li class="post-copyright-license">
+      <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+        
+
     </footer>
   </article>
 </div>
+
 
 
 

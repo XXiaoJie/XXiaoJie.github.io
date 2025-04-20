@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 7.3.0">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha256-dABdfBfUoC8vJUBOwGVdm8L9qlMWaHTIfXt+7GnZCIo=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"xxiaojie.github.io","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.23.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":false,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="Hello，大家好，我是Xiaojie，好久不见，欢迎大家能够和Xiaojie一起学习毫米波雷达知识，Xiaojie准备连载一个系列的文章—DDMA信号处理以及数据处理的流程，本系列文章将从目标生成、信号仿真、测距、测速、cfar检测、测角、目标聚类、目标跟踪这几个模块逐步介绍，这个系列的文章大约是一个7-8篇左右。 最终效果如下：  整体文件的目录树如下：  本篇文章主要讲的是cfar检测部分。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="DDMA signal&amp;data Process(5)">
+<meta property="og:url" content="https://xxiaojie.github.io/2025/04/20/radar/DDMA/DDMA%20signal&data%20Process(5)/index.html">
+<meta property="og:site_name" content="xiaojie雷达说">
+<meta property="og:description" content="Hello，大家好，我是Xiaojie，好久不见，欢迎大家能够和Xiaojie一起学习毫米波雷达知识，Xiaojie准备连载一个系列的文章—DDMA信号处理以及数据处理的流程，本系列文章将从目标生成、信号仿真、测距、测速、cfar检测、测角、目标聚类、目标跟踪这几个模块逐步介绍，这个系列的文章大约是一个7-8篇左右。 最终效果如下：  整体文件的目录树如下：  本篇文章主要讲的是cfar检测部分。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://xxiaojie.github.io/2025/04/20/radar/DDMA/DDMA%20signal&data%20Process(5)/1.gif">
+<meta property="og:image" content="https://xxiaojie.github.io/2025/04/20/radar/DDMA/DDMA%20signal&data%20Process(5)/2.png">
+<meta property="og:image" content="https://xxiaojie.github.io/2025/04/20/radar/DDMA/DDMA%20signal&data%20Process(5)/3.png">
+<meta property="og:image" content="https://xxiaojie.github.io/2025/04/20/radar/DDMA/DDMA%20signal&data%20Process(5)/4.png">
+<meta property="og:image" content="https://xxiaojie.github.io/2025/04/20/radar/DDMA/DDMA%20signal&data%20Process(5)/5.png">
+<meta property="og:image" content="https://xxiaojie.github.io/2025/04/20/radar/DDMA/DDMA%20signal&data%20Process(5)/6.png">
+<meta property="og:image" content="https://xxiaojie.github.io/2025/04/20/radar/DDMA/DDMA%20signal&data%20Process(5)/7.png">
+<meta property="og:image" content="https://xxiaojie.github.io/2025/04/20/radar/DDMA/DDMA%20signal&data%20Process(5)/8.png">
+<meta property="og:image" content="https://xxiaojie.github.io/2025/04/20/radar/DDMA/DDMA%20signal&data%20Process(5)/9.png">
+<meta property="og:image" content="https://xxiaojie.github.io/2025/04/20/radar/DDMA/DDMA%20signal&data%20Process(5)/10.png">
+<meta property="article:published_time" content="2025-04-20T06:51:14.000Z">
+<meta property="article:modified_time" content="2025-04-20T07:15:53.734Z">
+<meta property="article:author" content="xiaojie">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://xxiaojie.github.io/2025/04/20/radar/DDMA/DDMA%20signal&data%20Process(5)/1.gif">
+
+
+<link rel="canonical" href="https://xxiaojie.github.io/2025/04/20/radar/DDMA/DDMA%20signal&data%20Process(5)/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://xxiaojie.github.io/2025/04/20/radar/DDMA/DDMA%20signal&data%20Process(5)/","path":"2025/04/20/radar/DDMA/DDMA signal&data Process(5)/","title":"DDMA signal&data Process(5)"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>DDMA signal&data Process(5) | xiaojie雷达说</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/motion.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  
+
+
+
+
+
+
+  
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+  
+
+  <script class="next-config" data-name="enableMath" type="application/json">true</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"none","js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.js","integrity":"sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI="}}</script>
+<script src="/js/third-party/math/mathjax.js" defer></script>
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<link href="https://cdn.bootcss.com/KaTeX/0.11.1/katex.min.css" rel="stylesheet" /></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">xiaojie雷达说</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li><li class="menu-item menu-item-schedule"><a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>日程表</a></li><li class="menu-item menu-item-sitemap"><a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>站点地图</a></li><li class="menu-item menu-item-commonweal"><a href="/404/" rel="section"><i class="fa fa-heartbeat fa-fw"></i>公益 404</a></li>
+  </ul>
+</nav>
+
+
+
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">CFAR检测器的类型</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#ca-cfar"><span class="nav-number">1.1.</span> <span class="nav-text">CA-CFAR</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#so-cfar"><span class="nav-number">1.2.</span> <span class="nav-text">SO-CFAR</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#go-cfar"><span class="nav-number">1.3.</span> <span class="nav-text">GO-CFAR</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#os-cfar"><span class="nav-number">1.4.</span> <span class="nav-text">OS-CFAR</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">2.</span> <span class="nav-text">本文cfar检测</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9F%BA%E4%BA%8Eempty-band%E7%9A%84ddma%E8%A7%A3%E8%B0%83"><span class="nav-number">2.1.</span> <span class="nav-text">基于Empty-band的DDMA解调</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%A3%E7%A0%81%E4%BB%BF%E7%9C%9F"><span class="nav-number">2.2.</span> <span class="nav-text">代码仿真</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#cfar-m%E6%96%87%E4%BB%B6"><span class="nav-number">2.2.1.</span> <span class="nav-text">cfar.m文件</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">3.</span> <span class="nav-text">参考文献</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="xiaojie"
+      src="/images/xiaojie.png">
+  <p class="site-author-name" itemprop="name">xiaojie</p>
+  <div class="site-description" itemprop="description">分享雷达知识</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">8</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="cc-license animated" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" rel="noopener" target="_blank"><img src="https://cdnjs.cloudflare.com/ajax/libs/creativecommons-vocabulary/2020.11.3/assets/license_badges/small/by_nc_sa.svg" alt="Creative Commons"></a>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://xxiaojie.github.io/2025/04/20/radar/DDMA/DDMA%20signal&data%20Process(5)/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/xiaojie.png">
+      <meta itemprop="name" content="xiaojie">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="xiaojie雷达说">
+      <meta itemprop="description" content="分享雷达知识">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="DDMA signal&amp;data Process(5) | xiaojie雷达说">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          DDMA signal&data Process(5)
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+      
+
+      <time title="创建时间：2025-04-20 14:51:14 / 修改时间：15:15:53" itemprop="dateCreated datePublished" datetime="2025-04-20T14:51:14+08:00">2025-04-20</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/radar/" itemprop="url" rel="index"><span itemprop="name">radar</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/radar/DDMA-radar/" itemprop="url" rel="index"><span itemprop="name">DDMA radar</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+    <span class="post-meta-break"></span>
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>5.6k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>5 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>Hello，大家好，我是Xiaojie，好久不见，欢迎大家能够和Xiaojie一起学习毫米波雷达知识，Xiaojie准备连载一个系列的文章—DDMA信号处理以及数据处理的流程，本系列文章将从目标生成、信号仿真、测距、测速、cfar检测、测角、目标聚类、目标跟踪这几个模块逐步介绍，这个系列的文章大约是一个7-8篇左右。</p>
+<p>最终效果如下：</p>
+<img src="/2025/04/20/radar/DDMA/DDMA%20signal&data%20Process(5)/1.gif" class="" title="放置图片">
+<p>整体文件的目录树如下：</p>
+<img src="/2025/04/20/radar/DDMA/DDMA%20signal&data%20Process(5)/2.png" class="" title="放置图片">
+<p>本篇文章主要讲的是cfar检测部分。</p>
+<p>cfar检测是雷达信号处理中最重要的部分，在CFAR检测中，雷达检测目标所面临的两大问题：虚警、漏报</p>
+<p>主要原因是：</p>
+<ol>
+<li>
+<p>雷达在检测目标时受到强杂波和干扰的影响；</p>
+</li>
+<li>
+<p>接收目标信号时，还会接收噪声、杂波和干扰信号，这些信号具有随机性，信号的强度时刻发生变化</p>
+</li>
+</ol>
+<p>雷达如何根据杂波、噪声等背景信号自适应调整判决门限以保证雷达具有恒定的虚警概率是雷达CFAR检测的关键。</p>
+<p>恒虚警率就是保证虚警概率不变。虚警概率可以用如下式子表示</p>
+<p><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>P</mi><mi>F</mi></msub><mo>=</mo><msubsup><mo>∫</mo><mi>γ</mi><mi mathvariant="normal">∞</mi></msubsup><mi>p</mi><mo stretchy="false">(</mo><mi>T</mi><mi mathvariant="normal">∣</mi><msub><mi>H</mi><mn>0</mn></msub><mo stretchy="false">)</mo><mi>d</mi><mi>T</mi></mrow><annotation encoding="application/x-tex">P_F = \int _{\gamma}^{\infty}p(T|H_0)dT</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.13889em;">P</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.32833099999999993em;"><span style="top:-2.5500000000000003em;margin-left:-0.13889em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight" style="margin-right:0.13889em;">F</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:1.35122em;vertical-align:-0.49192800000000003em;"></span><span class="mop"><span class="mop op-symbol small-op" style="margin-right:0.19445em;position:relative;top:-0.0005599999999999772em;">∫</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8592920000000002em;"><span style="top:-2.34418em;margin-left:-0.19445em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight" style="margin-right:0.05556em;">γ</span></span></span></span><span style="top:-3.2579000000000002em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">∞</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.49192800000000003em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord mathdefault">p</span><span class="mopen">(</span><span class="mord mathdefault" style="margin-right:0.13889em;">T</span><span class="mord">∣</span><span class="mord"><span class="mord mathdefault" style="margin-right:0.08125em;">H</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:-0.08125em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mclose">)</span><span class="mord mathdefault">d</span><span class="mord mathdefault" style="margin-right:0.13889em;">T</span></span></span></span></p>
+<p>积分下限是判决门限，T是检验统计量，<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>H</mi><mn>0</mn></msub></mrow><annotation encoding="application/x-tex">H_0</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.08125em;">H</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:-0.08125em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span>是无信号的假设：二元假设:<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>H</mi><mn>0</mn></msub></mrow><annotation encoding="application/x-tex">H_0</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.08125em;">H</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:-0.08125em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span>:无信号；<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>H</mi><mn>1</mn></msub></mrow><annotation encoding="application/x-tex">H_1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.08125em;">H</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:-0.08125em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span>:有信号，一般是设定虚警概率，可以解出判决门限，通过判决门限计算检测概率：检测概率的积分区间跟虚警概率的积分区间是一样的，只是基于的假设不同。</p>
+<h1>CFAR检测器的类型</h1>
+<ul>
+<li>
+<p>固定门限检测器</p>
+<p>这种情况下噪声幅度服从瑞利分布，上述积分里的概率密度精确已知，确定了门限那么积分值就定了</p>
+</li>
+<li>
+<p>自适应门限检测器</p>
+<pre><code>单元平均CFAR：CA-CFAR
+选小CFAR检测器：SO-CFAR
+选大CFAR检测器：GO-CFAR
+有序CFAR检测器：OS-CFAR
+</code></pre>
+<p>不同距离段的杂波平均功率是不同的，为了保证虚警概率恒定，需要估计杂波平均功率，然后根据杂波平均功率设置检测门限</p>
+<pre><code>1. 估计杂波平均功率：利用相邻单元的杂波平均功率近似相等这一条件，通过邻近距离单元回波功率来估计待检测距离单元杂波平均功率。
+2. 将估计的杂波平均功率乘以一个系数作为检测门限
+</code></pre>
+</li>
+</ul>
+<h2 id="ca-cfar">CA-CFAR</h2>
+<img src="/2025/04/20/radar/DDMA/DDMA%20signal&data%20Process(5)/3.png" class="" title="放置图片">
+<h2 id="so-cfar">SO-CFAR</h2>
+<p>当参考距离单元内存在一个强干扰目标时，CA-CFAR检测门限会提高，导致信号较弱的目标难以检测。</p>
+<img src="/2025/04/20/radar/DDMA/DDMA%20signal&data%20Process(5)/4.png" class="" title="放置图片">
+<p>关于上图的解释：左图某个距离单元处的门限计算是以该距离单元为中心左侧跟右侧是参考单元，在作图重由于弱目标的参考单元中包含了强的目标，使得在弱目标处的门限计算偏大，造成漏检；右图使用的SO-CFAR</p>
+<p>解决方法：将左右参考距离单元的杂波平均功率单独计算，并取其中较小的估计值作为待检测距离单元杂波功率来计算检测门限以避免弱目标被漏检</p>
+<img src="/2025/04/20/radar/DDMA/DDMA%20signal&data%20Process(5)/5.png" class="" title="放置图片">
+<p>适用场景：参考距离单元某一侧邻近距离单元存在强目标</p>
+<h2 id="go-cfar">GO-CFAR</h2>
+<p>当杂波严重不均匀时，采用CA-CFAR检测杂波边缘会产生虚警</p>
+<img src="/2025/04/20/radar/DDMA/DDMA%20signal&data%20Process(5)/6.png" class="" title="放置图片">
+<p>关于上图的解释：左图表示某些距离单元处杂波幅度值比较大，超过了门限，导致了虚警；右图使用的是GO_CFAR</p>
+<p>解决方法：将左右参考单元的杂波平均功率单独计算，并取其中较大的估计值作为待检测距离单元</p>
+<img src="/2025/04/20/radar/DDMA/DDMA%20signal&data%20Process(5)/7.png" class="" title="放置图片">
+<p>适用场景：非均匀杂波</p>
+<h2 id="os-cfar">OS-CFAR</h2>
+<p>当参考单元内存在&quot;多个强干扰目标时&quot;，多个目标的存在会导致估计的杂波平均功率过高，从而抬高检测门限、导致漏警。</p>
+<img src="/2025/04/20/radar/DDMA/DDMA%20signal&data%20Process(5)/8.png" class="" title="放置图片">
+<p>关于上图的解释：左图使用的是SO_CFAR；右图使用的是OS_CFAR</p>
+<p>解决方法：将各参考单元回波功率进行排序，选取中间某个值作为待检测距离单元杂波平均功率来计算门限</p>
+<p>接收信号</p>
+<img src="/2025/04/20/radar/DDMA/DDMA%20signal&data%20Process(5)/9.png" class="" title="放置图片">
+<p>使用场景：存在多个强干扰目标的场景</p>
+<h1>本文cfar检测</h1>
+<p>本文cfar检测使用固定的阈值，当目标的能量大于阈值为则将目标检测出来。同时由于仿真原始信号为DDMA体制的雷达，发射信号存在移相，且相移为60deg，因此在做完快慢时间傅里叶变换会形成6个子带，其中4个为有效子带，2个为空子带。</p>
+<p>在检测过程中，在6个子带中，有4个子带大于阈值，且其余两个子带小于阈值，则判断为有效目标，否则为无效目标；在判断为有效目标的情况下，需要解速度模糊</p>
+<h2 id="基于empty-band的ddma解调">基于Empty-band的DDMA解调</h2>
+<img src="/2025/04/20/radar/DDMA/DDMA%20signal&data%20Process(5)/10.png" class="" title="放置图片">
+<h2 id="代码仿真">代码仿真</h2>
+<h3 id="cfar-m文件">cfar.m文件</h3>
+<p>cfar.m文件主要对非相干积累后的RD图进行目标检测，返回值为检测到的目标的点云</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br></pre></td><td class="code"><pre><span class="line">function [pointList] = cfar(parameter,detectionMatrix)</span><br><span class="line"></span><br><span class="line">    globalNoise = getGlobalNoise(parameter,detectionMatrix); %全局底噪</span><br><span class="line">    dopplerNoise = getDopplerNoise(detectionMatrix); %doppler维度底噪</span><br><span class="line">    pointIndex = 1;</span><br><span class="line">    for rangeIdx = 1:1:parameter.rangeBin %循环所有rangebin</span><br><span class="line">        </span><br><span class="line">        currentRangeRegionThresh = parameter.cfarRangeRegionThresh(ceil(rangeIdx / parameter.cfarEachRegionRangeBinNums)); %当前距离单元的cfar阈值</span><br><span class="line">        currentDopplerNoise = dopplerNoise(rangeIdx); %获取当前range index的doppler维度噪声</span><br><span class="line">        currentRangeThresh = currentDopplerNoise + currentRangeRegionThresh; %当前range index总阈值</span><br><span class="line">        </span><br><span class="line">        for dopplerIdx = 1:1:parameter.subDopplerBin %循环一半dopplerBin</span><br><span class="line"></span><br><span class="line">            for subBandIdx = 1:1:parameter.subBand %循环6个子带</span><br><span class="line"></span><br><span class="line">                dopplerIdx1 = mod(dopplerIdx + parameter.subBandRelation(1) + parameter.subDopplerBin * (subBandIdx - 1), parameter.dopplerBin) + 1; %dopplerIdx1</span><br><span class="line">                dopplerIdx2 = mod(dopplerIdx + parameter.subBandRelation(2) + parameter.subDopplerBin * (subBandIdx - 1), parameter.dopplerBin) + 1; %dopplerIdx2</span><br><span class="line">                dopplerIdx3 = mod(dopplerIdx + parameter.subBandRelation(3) + parameter.subDopplerBin * (subBandIdx - 1), parameter.dopplerBin) + 1; %dopplerIdx3</span><br><span class="line">                dopplerIdx4 = mod(dopplerIdx + parameter.subBandRelation(4) + parameter.subDopplerBin * (subBandIdx - 1), parameter.dopplerBin) + 1; %dopplerIdx4</span><br><span class="line"></span><br><span class="line">                currentCellPower1 = detectionMatrix(dopplerIdx1,rangeIdx);%dopplerIdx1对应的power</span><br><span class="line">                currentCellPower2 = detectionMatrix(dopplerIdx2,rangeIdx);%dopplerIdx2对应的power</span><br><span class="line">                currentCellPower3 = detectionMatrix(dopplerIdx3,rangeIdx);%dopplerIdx3对应的power</span><br><span class="line">                currentCellPower4 = detectionMatrix(dopplerIdx4,rangeIdx);%dopplerIdx4对应的power</span><br><span class="line">                currentCellPower = [currentCellPower1,currentCellPower2,currentCellPower3,currentCellPower4]; %4个点的能量</span><br><span class="line">                maxPowerCurrentCell = max(currentCellPower); %4个点中最大的能量值</span><br><span class="line">                minPowerCurrentCell = min(currentCellPower); %4个点中最小的能量值</span><br><span class="line">                if (currentCellPower1 &gt; currentRangeThresh &amp;&amp; currentCellPower2 &gt; currentRangeThresh &amp;&amp; currentCellPower3 &gt; currentRangeThresh &amp;&amp; currentCellPower4 &gt; currentRangeThresh &amp;&amp; ...</span><br><span class="line">                        (maxPowerCurrentCell - minPowerCurrentCell) &lt; parameter.cfarChannelUnbalancedThresh) %条件判决, 进入判决的条件内的为目标点</span><br><span class="line">                    </span><br><span class="line">                    pointList(pointIndex).rangeIdx = rangeIdx; %rangeIdx赋值</span><br><span class="line"></span><br><span class="line">                    </span><br><span class="line">                    pointList(pointIndex).dopplerIdx = dopplerIdx1; %dopplerIdx赋值</span><br><span class="line">                    if dopplerIdx1 &gt; parameter.dopplerBinHalf %dopplerIdx1大于dopplerBinHalf</span><br><span class="line">                        pointList(pointIndex).dopplerShiftIdx = dopplerIdx1 - parameter.dopplerBin; %dopplerShiftIdx赋值</span><br><span class="line">                    else</span><br><span class="line">                        pointList(pointIndex).dopplerShiftIdx = dopplerIdx1; %dopplerIdx赋值</span><br><span class="line">                    end</span><br><span class="line">                    </span><br><span class="line">                    % 普通DDM range和doppler赋值</span><br><span class="line">                    %pointList(pointIndex).range = rangeIdx * parameter.rangeRes; %普通range赋值</span><br><span class="line">                    %pointList(pointIndex).speed = pointList(pointIndex).dopplerShiftIdx * parameter.dopplerRes; %doppler赋值</span><br><span class="line">                    pointList(pointIndex).range = range; %range赋值</span><br><span class="line">                    pointList(pointIndex).speed = speed;</span><br><span class="line">                    pointList(pointIndex).power = maxPowerCurrentCell; %功率赋值</span><br><span class="line">                    pointList(pointIndex).snr = maxPowerCurrentCell - globalNoise; %信噪比赋值</span><br><span class="line">                    pointList(pointIndex).txOrder = subBandIdx; %天线顺序</span><br><span class="line">                    pointList(pointIndex).conf1 = 0; %置信度1赋值</span><br><span class="line">                    pointList(pointIndex).conf2 = 0; %置信度2赋值</span><br><span class="line">                    pointList(pointIndex).quality = 0; %点云质量赋值</span><br><span class="line">                    pointIndex = pointIndex + 1;</span><br><span class="line">                end</span><br><span class="line">                </span><br><span class="line">            end</span><br><span class="line">            </span><br><span class="line">        end</span><br><span class="line">        </span><br><span class="line">    end</span><br><span class="line"></span><br><span class="line">end</span><br><span class="line">%%</span><br><span class="line">% 获取全局底噪</span><br><span class="line">function noise = getGlobalNoise(parameter,detectionMatrix)</span><br><span class="line"></span><br><span class="line">    rangeIdx = parameter.cfarGlobalNoiseRangeIdx;</span><br><span class="line">    dopplerIdx = parameter.cfarGlobalNoiseDopplerIdx;</span><br><span class="line">    rangeLen = parameter.cfarGlobalNoiseRangeLen;</span><br><span class="line">    dopplerLen = parameter.cfarGlobalNoiseDopplerLen;</span><br><span class="line">    region1Noise = mean(mean(detectionMatrix(dopplerIdx - dopplerLen:dopplerIdx,rangeIdx - rangeLen:rangeIdx)));</span><br><span class="line">    region2Noise = mean(mean(detectionMatrix(dopplerIdx:dopplerIdx + dopplerLen,rangeIdx - rangeLen:rangeIdx)));</span><br><span class="line">    region3Noise = mean(mean(detectionMatrix(dopplerIdx - dopplerLen:dopplerIdx,rangeIdx:rangeIdx + rangeLen)));</span><br><span class="line">    region4Noise = mean(mean(detectionMatrix(dopplerIdx:dopplerIdx + dopplerLen,rangeIdx:rangeIdx + rangeLen)));</span><br><span class="line">    noise = min([region1Noise,region2Noise,region3Noise,region4Noise]);</span><br><span class="line">end</span><br><span class="line">%% </span><br><span class="line">% 获取doppler维度底噪</span><br><span class="line">function dopplerNoise = getDopplerNoise(detectionMatrix)</span><br><span class="line"></span><br><span class="line">    dopplerNoise = mean(detectionMatrix,1);</span><br><span class="line"></span><br><span class="line">end</span><br></pre></td></tr></table></figure>
+<h1>参考文献</h1>
+<ol>
+<li>《基于 AWR2944 的汽车雷达 DDMA 波形的原理和实现》</li>
+<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/weixin_42686221/article/details/124915956?spm=1001.2014.3001.5501">【统计信号处理检测理论：CFAR检测】</a></li>
+</ol>
+<p><strong>至此，本片文章就此结束了。</strong></p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          
+
+<div class="post-copyright">
+<ul>
+  <li class="post-copyright-author">
+      <strong>本文作者： </strong>xiaojie
+  </li>
+  <li class="post-copyright-link">
+      <strong>本文链接：</strong>
+      <a href="https://xxiaojie.github.io/2025/04/20/radar/DDMA/DDMA%20signal&data%20Process(5)/" title="DDMA signal&amp;data Process(5)">https://xxiaojie.github.io/2025/04/20/radar/DDMA/DDMA signal&data Process(5)/</a>
+  </li>
+  <li class="post-copyright-license">
+      <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2025/04/20/radar/DDMA/DDMA%20signal&data%20Process(4)/" rel="prev" title="DDMA signal&amp;data Process(4)">
+                  <i class="fa fa-angle-left"></i> DDMA signal&data Process(4)
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2025/04/20/radar/DDMA/DDMA%20signal&data%20Process(6)/" rel="next" title="DDMA signal&amp;data Process(6)">
+                  DDMA signal&data Process(6) <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">xiaojie</span>
+  </div>
+<div class="wordcount">
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-line"></i>
+    </span>
+      <span>站点总字数：</span>
+    <span title="站点总字数">39k</span>
+  </span>
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span>站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">35 分钟</span>
+  </span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

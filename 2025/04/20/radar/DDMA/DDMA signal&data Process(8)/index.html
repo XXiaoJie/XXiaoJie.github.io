@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 7.3.0">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha256-dABdfBfUoC8vJUBOwGVdm8L9qlMWaHTIfXt+7GnZCIo=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"xxiaojie.github.io","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.23.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":false,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="Hello，大家好，我是Xiaojie，好久不见，欢迎大家能够和Xiaojie一起学习毫米波雷达知识，Xiaojie准备连载一个系列的文章—DDMA信号处理以及数据处理的流程，本系列文章将从目标生成、信号仿真、测距、测速、cfar检测、测角、目标聚类、目标跟踪这几个模块逐步介绍，这个系列的文章大约是一个7-8篇左右。 最终效果如下：  整体文件的目录树如下：  本篇文章主要讲的是跟踪部分，也是本系">
+<meta property="og:type" content="article">
+<meta property="og:title" content="DDMA signal&amp;data Process(8)">
+<meta property="og:url" content="https://xxiaojie.github.io/2025/04/20/radar/DDMA/DDMA%20signal&data%20Process(8)/index.html">
+<meta property="og:site_name" content="xiaojie雷达说">
+<meta property="og:description" content="Hello，大家好，我是Xiaojie，好久不见，欢迎大家能够和Xiaojie一起学习毫米波雷达知识，Xiaojie准备连载一个系列的文章—DDMA信号处理以及数据处理的流程，本系列文章将从目标生成、信号仿真、测距、测速、cfar检测、测角、目标聚类、目标跟踪这几个模块逐步介绍，这个系列的文章大约是一个7-8篇左右。 最终效果如下：  整体文件的目录树如下：  本篇文章主要讲的是跟踪部分，也是本系">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://xxiaojie.github.io/2025/04/20/radar/DDMA/DDMA%20signal&data%20Process(8)/1.gif">
+<meta property="og:image" content="https://xxiaojie.github.io/2025/04/20/radar/DDMA/DDMA%20signal&data%20Process(8)/2.png">
+<meta property="article:published_time" content="2025-04-20T07:58:14.000Z">
+<meta property="article:modified_time" content="2025-04-20T07:26:21.719Z">
+<meta property="article:author" content="xiaojie">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://xxiaojie.github.io/2025/04/20/radar/DDMA/DDMA%20signal&data%20Process(8)/1.gif">
+
+
+<link rel="canonical" href="https://xxiaojie.github.io/2025/04/20/radar/DDMA/DDMA%20signal&data%20Process(8)/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://xxiaojie.github.io/2025/04/20/radar/DDMA/DDMA%20signal&data%20Process(8)/","path":"2025/04/20/radar/DDMA/DDMA signal&data Process(8)/","title":"DDMA signal&data Process(8)"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>DDMA signal&data Process(8) | xiaojie雷达说</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/motion.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  
+
+
+
+
+
+
+  
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+  
+
+  <script class="next-config" data-name="enableMath" type="application/json">true</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"none","js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.js","integrity":"sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI="}}</script>
+<script src="/js/third-party/math/mathjax.js" defer></script>
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<link href="https://cdn.bootcss.com/KaTeX/0.11.1/katex.min.css" rel="stylesheet" /></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">xiaojie雷达说</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li><li class="menu-item menu-item-schedule"><a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>日程表</a></li><li class="menu-item menu-item-sitemap"><a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>站点地图</a></li><li class="menu-item menu-item-commonweal"><a href="/404/" rel="section"><i class="fa fa-heartbeat fa-fw"></i>公益 404</a></li>
+  </ul>
+</nav>
+
+
+
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">基础知识</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%B3%E8%81%94%E7%AE%97%E6%B3%95"><span class="nav-number">1.1.</span> <span class="nav-text">关联算法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%B7%9F%E8%B8%AA%E7%AE%97%E6%B3%95"><span class="nav-number">1.2.</span> <span class="nav-text">跟踪算法</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">2.</span> <span class="nav-text">代码仿真</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#associateprocess-m%E6%96%87%E4%BB%B6"><span class="nav-number">2.1.</span> <span class="nav-text">associateProcess.m文件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#trackprocess-m%E6%96%87%E4%BB%B6"><span class="nav-number">2.2.</span> <span class="nav-text">trackProcess.m文件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#kalmancore-m%E6%96%87%E4%BB%B6"><span class="nav-number">2.3.</span> <span class="nav-text">kalmanCore.m文件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#trackcreate-m%E6%96%87%E4%BB%B6"><span class="nav-number">2.4.</span> <span class="nav-text">trackCreate.m文件</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="xiaojie"
+      src="/images/xiaojie.png">
+  <p class="site-author-name" itemprop="name">xiaojie</p>
+  <div class="site-description" itemprop="description">分享雷达知识</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">8</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="cc-license animated" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" rel="noopener" target="_blank"><img src="https://cdnjs.cloudflare.com/ajax/libs/creativecommons-vocabulary/2020.11.3/assets/license_badges/small/by_nc_sa.svg" alt="Creative Commons"></a>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://xxiaojie.github.io/2025/04/20/radar/DDMA/DDMA%20signal&data%20Process(8)/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/xiaojie.png">
+      <meta itemprop="name" content="xiaojie">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="xiaojie雷达说">
+      <meta itemprop="description" content="分享雷达知识">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="DDMA signal&amp;data Process(8) | xiaojie雷达说">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          DDMA signal&data Process(8)
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+      
+
+      <time title="创建时间：2025-04-20 15:58:14 / 修改时间：15:26:21" itemprop="dateCreated datePublished" datetime="2025-04-20T15:58:14+08:00">2025-04-20</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/radar/" itemprop="url" rel="index"><span itemprop="name">radar</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/radar/DDMA-radar/" itemprop="url" rel="index"><span itemprop="name">DDMA radar</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+    <span class="post-meta-break"></span>
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>5.1k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>5 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>Hello，大家好，我是Xiaojie，好久不见，欢迎大家能够和Xiaojie一起学习毫米波雷达知识，Xiaojie准备连载一个系列的文章—DDMA信号处理以及数据处理的流程，本系列文章将从目标生成、信号仿真、测距、测速、cfar检测、测角、目标聚类、目标跟踪这几个模块逐步介绍，这个系列的文章大约是一个7-8篇左右。</p>
+<p>最终效果如下：</p>
+<img src="/2025/04/20/radar/DDMA/DDMA%20signal&data%20Process(8)/1.gif" class="" title="放置图片">
+<p>整体文件的目录树如下：</p>
+<img src="/2025/04/20/radar/DDMA/DDMA%20signal&data%20Process(8)/2.png" class="" title="放置图片">
+<p>本篇文章主要讲的是跟踪部分，也是本系列文章最后一篇文章，主要分为两部分关联和跟踪，跟踪是指将对目标进行跟踪，主要采用卡尔曼滤波；关联是指将目标的聚类和跟踪后的结果进行关联。</p>
+<p><strong><font color ="red">代码链接：<a target="_blank" rel="noopener" href="https://pan.baidu.com/s/1AYGbRzOa8dMkh00jLeQs4g%EF%BC%8C%E5%AF%86%E7%A0%81%E5%9C%A8%E6%96%87%E6%9C%AB%E3%80%82">https://pan.baidu.com/s/1AYGbRzOa8dMkh00jLeQs4g，密码在文末。</a></font></strong></p>
+<h1>基础知识</h1>
+<h2 id="关联算法">关联算法</h2>
+<p>关联是采用的是最近邻算法，将航迹与聚类进行关联</p>
+<h2 id="跟踪算法">跟踪算法</h2>
+<p>卡尔曼滤波，可以参考B站UP主DR_CAN的录制视频，<a target="_blank" rel="noopener" href="https://space.bilibili.com/230105574/channel/collectiondetail?sid=1814741">链接点击这里</a>，讲述了卡尔曼滤波的五个公式的推导过程。</p>
+<h1>代码仿真</h1>
+<h2 id="associateprocess-m文件">associateProcess.m文件</h2>
+<p>trackProcess.m是关联算法，将航迹与聚类进行关联</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">function parameter = associateProcess(parameter)</span><br><span class="line"></span><br><span class="line">    trackNums = parameter.trackPara.trackCurrNums; %航迹数目</span><br><span class="line">    clusterNums = parameter.clusterPara.clusterCurrNums; %聚类数目</span><br><span class="line">    %航迹和聚类关联</span><br><span class="line">    for trackIdx = 1:1:trackNums</span><br><span class="line">        trackLa = parameter.trackPara.trackMsg(trackIdx).la; %航迹的纵距</span><br><span class="line">        trackLo = parameter.trackPara.trackMsg(trackIdx).lo; %航迹的横距</span><br><span class="line">        Thresh = 9999;</span><br><span class="line">        for clusterIdx = 1:1:clusterNums</span><br><span class="line">            clusterLa = parameter.clusterPara.clusterTarget(clusterIdx).la; %聚类的纵距</span><br><span class="line">            clusterLo = parameter.clusterPara.clusterTarget(clusterIdx).lo; %聚类的横距</span><br><span class="line">            EuclideanDistance = sqrt((trackLa - clusterLa).^2 + (trackLo - clusterLo).^2); %欧式距离</span><br><span class="line">            if EuclideanDistance &lt; Thresh</span><br><span class="line">                parameter.trackPara.trackTarget(trackIdx).kalmanFilterPara.associateValue = [clusterLa;clusterLo]; %关联值赋值</span><br><span class="line">                Thresh = EuclideanDistance;</span><br><span class="line">            end</span><br><span class="line">        end</span><br><span class="line">    end</span><br><span class="line">end</span><br></pre></td></tr></table></figure>
+<h2 id="trackprocess-m文件">trackProcess.m文件</h2>
+<p>trackProcess.m是跟踪处理的主函数</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">%% 跟踪处理</span><br><span class="line">function [parameter] = trackProcess(parameter)</span><br><span class="line"></span><br><span class="line">    for trackIdx = 1:1:parameter.trackPara.trackCurrNums</span><br><span class="line">        %当前的测量值为关联的聚类值</span><br><span class="line">        currMeasurement = parameter.trackPara.trackTarget(trackIdx).kalmanFilterPara.associateValue;</span><br><span class="line">        %卡尔曼估计</span><br><span class="line">        [parameter.trackPara.trackTarget(trackIdx)] = kalmanCore(parameter.trackPara.trackTarget(trackIdx),currMeasurement);</span><br><span class="line">        %卡尔曼估计最优值赋值</span><br><span class="line">        parameter.trackPara.trackMsg(trackIdx).la = parameter.trackPara.trackTarget(trackIdx).kalmanFilterPara.optimizeState(1);</span><br><span class="line">        parameter.trackPara.trackMsg(trackIdx).lo = parameter.trackPara.trackTarget(trackIdx).kalmanFilterPara.optimizeState(2);</span><br><span class="line">        parameter.trackPara.trackMsg(trackIdx).V_La = parameter.trackPara.trackTarget(trackIdx).kalmanFilterPara.optimizeState(3);</span><br><span class="line">        parameter.trackPara.trackMsg(trackIdx).V_Lo = parameter.trackPara.trackTarget(trackIdx).kalmanFilterPara.optimizeState(4);</span><br><span class="line">        %计算左下角点</span><br><span class="line">        parameter.trackPara.trackMsg(trackIdx).leftDownCornerLa = parameter.trackPara.trackMsg(trackIdx).la - 2;</span><br><span class="line">        parameter.trackPara.trackMsg(trackIdx).leftDownCornerLo = parameter.trackPara.trackMsg(trackIdx).lo - 2;</span><br><span class="line">    end</span><br><span class="line"></span><br><span class="line">end</span><br></pre></td></tr></table></figure>
+<h2 id="kalmancore-m文件">kalmanCore.m文件</h2>
+<p>kalmanCore.m是卡尔曼滤波的核心函数，囊括了卡尔曼滤波的五个公式</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line">%% 卡尔曼核心函数</span><br><span class="line">function [parameter] = kalmanCore(parameter,currMeasurement)</span><br><span class="line"></span><br><span class="line">    %1. 估计下一个状态</span><br><span class="line">    parameter.kalmanFilterPara.optimizeState = ...</span><br><span class="line">        parameter.kalmanFilterPara.A * parameter.kalmanFilterPara.optimizeState + ...</span><br><span class="line">        parameter.kalmanFilterPara.B * parameter.kalmanFilterPara.u;</span><br><span class="line">    %2. 估计协方差矩阵</span><br><span class="line">    parameter.kalmanFilterPara.P = ...</span><br><span class="line">        parameter.kalmanFilterPara.A * ...</span><br><span class="line">        parameter.kalmanFilterPara.P * ...</span><br><span class="line">        parameter.kalmanFilterPara.A&#x27; + ...</span><br><span class="line">        parameter.kalmanFilterPara.Q;</span><br><span class="line">    %3. 更新卡尔曼增益</span><br><span class="line">    kalmanGain = parameter.kalmanFilterPara.P * ...</span><br><span class="line">        parameter.kalmanFilterPara.H&#x27; * ...</span><br><span class="line">        inv(parameter.kalmanFilterPara.H * ...</span><br><span class="line">        parameter.kalmanFilterPara.P * ...</span><br><span class="line">        parameter.kalmanFilterPara.H&#x27; + ...</span><br><span class="line">        parameter.kalmanFilterPara.R); %计算卡尔曼增益</span><br><span class="line">    %4. 最优估计</span><br><span class="line">    parameter.kalmanFilterPara.optimizeState = ...</span><br><span class="line">        parameter.kalmanFilterPara.optimizeState + ...</span><br><span class="line">        kalmanGain * ...</span><br><span class="line">        (currMeasurement - ...</span><br><span class="line">        parameter.kalmanFilterPara.H * ...</span><br><span class="line">        parameter.kalmanFilterPara.optimizeState);</span><br><span class="line">%     currOptimzieEstimateState = parameter.kalmanFilterPara.optimizeState;</span><br><span class="line">    %5. 更新协方差矩阵</span><br><span class="line">    parameter.kalmanFilterPara.P = ...</span><br><span class="line">        (parameter.kalmanFilterPara.I - ...</span><br><span class="line">        kalmanGain * ...</span><br><span class="line">        parameter.kalmanFilterPara.H) * ...</span><br><span class="line">        parameter.kalmanFilterPara.P;</span><br><span class="line"></span><br><span class="line">end</span><br></pre></td></tr></table></figure>
+<h2 id="trackcreate-m文件">trackCreate.m文件</h2>
+<p>trackCreate.m文件主要是进行航迹创建</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line">function parameter = trackCreate(parameter)</span><br><span class="line"></span><br><span class="line">    % 聚类数目</span><br><span class="line">    clusterNums = parameter.clusterPara.clusterCurrNums;</span><br><span class="line">    % 循环所有聚类数目</span><br><span class="line">    for clusterIdx = 1:1:clusterNums</span><br><span class="line">        if parameter.trackPara.trackTarget(clusterIdx).exist == 0 %判断当前航迹是否存在，不存在测新建</span><br><span class="line">            clusterCount = parameter.clusterPara.clusterTarget(clusterIdx).count; %当前聚类存在的次数</span><br><span class="line">        </span><br><span class="line">            if clusterCount &gt; parameter.trackPara.trackCreateThresh %大于航迹创建的阈值，则新建航迹</span><br><span class="line">                parameter.trackPara.trackCurrNums = ...</span><br><span class="line">                    parameter.trackPara.trackCurrNums + 1; %航迹数增加</span><br><span class="line">                % 最优估计值赋值</span><br><span class="line">                parameter.trackPara.trackTarget(clusterIdx).kalmanFilterPara.optimizeState(1) = ...</span><br><span class="line">                    parameter.clusterPara.clusterTarget(clusterIdx).la;</span><br><span class="line">                parameter.trackPara.trackTarget(clusterIdx).kalmanFilterPara.optimizeState(2) = ...</span><br><span class="line">                    parameter.clusterPara.clusterTarget(clusterIdx).lo;</span><br><span class="line">                parameter.trackPara.trackTarget(clusterIdx).kalmanFilterPara.optimizeState(3) = ...</span><br><span class="line">                    parameter.clusterPara.clusterTarget(clusterIdx).V_La;</span><br><span class="line">                parameter.trackPara.trackTarget(clusterIdx).kalmanFilterPara.optimizeState(4) = ...</span><br><span class="line">                    parameter.clusterPara.clusterTarget(clusterIdx).V_Lo;</span><br><span class="line">                % 航迹横距纵距赋值</span><br><span class="line">                parameter.trackPara.trackMsg(clusterIdx).la = ...</span><br><span class="line">                    parameter.clusterPara.clusterTarget(clusterIdx).la;</span><br><span class="line">                parameter.trackPara.trackMsg(clusterIdx).lo = ...</span><br><span class="line">                    parameter.clusterPara.clusterTarget(clusterIdx).lo;</span><br><span class="line">                % 航迹左下角点赋值</span><br><span class="line">                parameter.trackPara.trackMsg(clusterIdx).leftDownCornerLa = ...</span><br><span class="line">                    parameter.trackPara.trackMsg(clusterIdx).la - 2;</span><br><span class="line">                parameter.trackPara.trackMsg(clusterIdx).leftDownCornerLo = ...    </span><br><span class="line">                    parameter.trackPara.trackMsg(clusterIdx).lo - 2;</span><br><span class="line">                % 标记航迹存在</span><br><span class="line">                parameter.trackPara.trackTarget(clusterIdx).exist = 1;</span><br><span class="line">            end</span><br><span class="line">        end</span><br><span class="line">    end</span><br><span class="line">    </span><br><span class="line">end</span><br></pre></td></tr></table></figure>
+<p><strong><font color ="red">代码链接密码：cz71</font></strong></p>
+<p>代码只供用于个人学习，切勿用于商用</p>
+<p><strong>至此，本系列文章就此结束了。</strong></p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          
+
+<div class="post-copyright">
+<ul>
+  <li class="post-copyright-author">
+      <strong>本文作者： </strong>xiaojie
+  </li>
+  <li class="post-copyright-link">
+      <strong>本文链接：</strong>
+      <a href="https://xxiaojie.github.io/2025/04/20/radar/DDMA/DDMA%20signal&data%20Process(8)/" title="DDMA signal&amp;data Process(8)">https://xxiaojie.github.io/2025/04/20/radar/DDMA/DDMA signal&data Process(8)/</a>
+  </li>
+  <li class="post-copyright-license">
+      <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2025/04/20/radar/DDMA/DDMA%20signal&data%20Process(7)/" rel="prev" title="DDMA signal&amp;data Process(7)">
+                  <i class="fa fa-angle-left"></i> DDMA signal&data Process(7)
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">xiaojie</span>
+  </div>
+<div class="wordcount">
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-line"></i>
+    </span>
+      <span>站点总字数：</span>
+    <span title="站点总字数">39k</span>
+  </span>
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span>站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">35 分钟</span>
+  </span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

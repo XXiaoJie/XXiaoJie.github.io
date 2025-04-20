@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 7.3.0">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha256-dABdfBfUoC8vJUBOwGVdm8L9qlMWaHTIfXt+7GnZCIo=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"xxiaojie.github.io","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.23.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":false,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="Hello，大家好，我是Xiaojie，好久不见，欢迎大家能够和Xiaojie一起学习毫米波雷达知识，Xiaojie准备连载一个系列的文章—DDMA信号处理以及数据处理的流程，本系列文章将从目标生成、信号仿真、测距、测速、cfar检测、测角、目标聚类、目标跟踪这几个模块逐步介绍，这个系列的文章大约是一个7-8篇左右。 最终效果如下：  整体文件的目录树如下：  从这篇文章开始就开始进入数据处理部">
+<meta property="og:type" content="article">
+<meta property="og:title" content="DDMA signal&amp;data Process(7)">
+<meta property="og:url" content="https://xxiaojie.github.io/2025/04/20/radar/DDMA/DDMA%20signal&data%20Process(7)/index.html">
+<meta property="og:site_name" content="xiaojie雷达说">
+<meta property="og:description" content="Hello，大家好，我是Xiaojie，好久不见，欢迎大家能够和Xiaojie一起学习毫米波雷达知识，Xiaojie准备连载一个系列的文章—DDMA信号处理以及数据处理的流程，本系列文章将从目标生成、信号仿真、测距、测速、cfar检测、测角、目标聚类、目标跟踪这几个模块逐步介绍，这个系列的文章大约是一个7-8篇左右。 最终效果如下：  整体文件的目录树如下：  从这篇文章开始就开始进入数据处理部">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://img.soogif.com/aqWNwoJt0fvCgQQhGXvwEbnaqUEHKPa8.gif?scope=mdnice">
+<meta property="og:image" content="https://xxiaojie.github.io/2025/04/20/radar/DDMA/DDMA%20signal&data%20Process(7)/1.gif">
+<meta property="og:image" content="https://xxiaojie.github.io/2025/04/20/radar/DDMA/DDMA%20signal&data%20Process(7)/2.png">
+<meta property="og:image" content="https://xxiaojie.github.io/2025/04/20/radar/DDMA/DDMA%20signal&data%20Process(7)/3.png">
+<meta property="article:published_time" content="2025-04-20T06:58:14.000Z">
+<meta property="article:modified_time" content="2025-04-20T07:23:05.211Z">
+<meta property="article:author" content="xiaojie">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://img.soogif.com/aqWNwoJt0fvCgQQhGXvwEbnaqUEHKPa8.gif?scope=mdnice">
+
+
+<link rel="canonical" href="https://xxiaojie.github.io/2025/04/20/radar/DDMA/DDMA%20signal&data%20Process(7)/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://xxiaojie.github.io/2025/04/20/radar/DDMA/DDMA%20signal&data%20Process(7)/","path":"2025/04/20/radar/DDMA/DDMA signal&data Process(7)/","title":"DDMA signal&data Process(7)"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>DDMA signal&data Process(7) | xiaojie雷达说</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/motion.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  
+
+
+
+
+
+
+  
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+  
+
+  <script class="next-config" data-name="enableMath" type="application/json">true</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"none","js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.js","integrity":"sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI="}}</script>
+<script src="/js/third-party/math/mathjax.js" defer></script>
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<link href="https://cdn.bootcss.com/KaTeX/0.11.1/katex.min.css" rel="stylesheet" /></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">xiaojie雷达说</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li><li class="menu-item menu-item-schedule"><a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>日程表</a></li><li class="menu-item menu-item-sitemap"><a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>站点地图</a></li><li class="menu-item menu-item-commonweal"><a href="/404/" rel="section"><i class="fa fa-heartbeat fa-fw"></i>公益 404</a></li>
+  </ul>
+</nav>
+
+
+
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">dbscan聚类</span></a></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">2.</span> <span class="nav-text">代码仿真</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#clusterprocess-m%E6%96%87%E4%BB%B6"><span class="nav-number">2.1.</span> <span class="nav-text">clusterProcess.m文件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#dbscancore-m%E6%96%87%E4%BB%B6"><span class="nav-number">2.2.</span> <span class="nav-text">dbscanCore.m文件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#calpointeuclideandistance-m%E6%96%87%E4%BB%B6"><span class="nav-number">2.3.</span> <span class="nav-text">calPointEuclideanDistance.m文件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#getpointneighbor-m%E6%96%87%E4%BB%B6"><span class="nav-number">2.4.</span> <span class="nav-text">getPointNeighbor.m文件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#clustermergecluster-m"><span class="nav-number">2.5.</span> <span class="nav-text">clusterMergeCluster.m</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#calclustermsg-m%E6%96%87%E4%BB%B6"><span class="nav-number">2.6.</span> <span class="nav-text">calClusterMsg.m文件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%90%E8%A1%8C%E7%BB%93%E6%9E%9C%E5%A6%82%E4%B8%8B%EF%BC%9A"><span class="nav-number">2.7.</span> <span class="nav-text">运行结果如下：</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="xiaojie"
+      src="/images/xiaojie.png">
+  <p class="site-author-name" itemprop="name">xiaojie</p>
+  <div class="site-description" itemprop="description">分享雷达知识</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">8</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="cc-license animated" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" rel="noopener" target="_blank"><img src="https://cdnjs.cloudflare.com/ajax/libs/creativecommons-vocabulary/2020.11.3/assets/license_badges/small/by_nc_sa.svg" alt="Creative Commons"></a>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://xxiaojie.github.io/2025/04/20/radar/DDMA/DDMA%20signal&data%20Process(7)/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/xiaojie.png">
+      <meta itemprop="name" content="xiaojie">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="xiaojie雷达说">
+      <meta itemprop="description" content="分享雷达知识">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="DDMA signal&amp;data Process(7) | xiaojie雷达说">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          DDMA signal&data Process(7)
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+      
+
+      <time title="创建时间：2025-04-20 14:58:14 / 修改时间：15:23:05" itemprop="dateCreated datePublished" datetime="2025-04-20T14:58:14+08:00">2025-04-20</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/radar/" itemprop="url" rel="index"><span itemprop="name">radar</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/radar/DDMA-radar/" itemprop="url" rel="index"><span itemprop="name">DDMA radar</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+    <span class="post-meta-break"></span>
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>9.1k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>8 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p><img src="https://img.soogif.com/aqWNwoJt0fvCgQQhGXvwEbnaqUEHKPa8.gif?scope=mdnice" alt=""></p>
+<p>Hello，大家好，我是Xiaojie，好久不见，欢迎大家能够和Xiaojie一起学习毫米波雷达知识，Xiaojie准备连载一个系列的文章—DDMA信号处理以及数据处理的流程，本系列文章将从目标生成、信号仿真、测距、测速、cfar检测、测角、目标聚类、目标跟踪这几个模块逐步介绍，这个系列的文章大约是一个7-8篇左右。</p>
+<p>最终效果如下：</p>
+<img src="/2025/04/20/radar/DDMA/DDMA%20signal&data%20Process(7)/1.gif" class="" title="放置图片">
+<p>整体文件的目录树如下：</p>
+<img src="/2025/04/20/radar/DDMA/DDMA%20signal&data%20Process(7)/2.png" class="" title="放置图片">
+<p>从这篇文章开始就开始进入数据处理部分了，本篇文章主要讲的是聚类部分，主要采用的聚类方法是dbscan。当雷达信号处理部分做完后，会得到目标的点云，包括距离、速度、角度。</p>
+<h1>dbscan聚类</h1>
+<p>dbscan(Density-Based Spatial Clustering of Application with Noise)是一种基于密度的聚类算法。</p>
+<p>密度聚类算法一般假定类别是可以通过样本分布的紧密程度来决定。在同一个类别中，样本之间是紧密相连的，也就是通过将紧密相连的样本划分为一类，这样就产生了一个聚类类别。</p>
+<ol>
+<li>
+<p>核心思想：dbscan的核心思想在于基于样本点的密度进行聚类，即通过找出样本空间中密集的区域进行簇的划分</p>
+</li>
+<li>
+<p>算法参数：dbscan需要两个主要参数：邻域半径和最少点数目。只有当某点在其邻域内的点数大于或等于最少点数目时，该点才被视为核心点。</p>
+</li>
+<li>
+<p>点类别：dbscan中的点分为三类：核心点、边界点和噪声点。核心点是指那些在邻域内具有足够多的点的对象，边界点则是那些邻近核心点但自身不是核心点，而噪声点则既不是核心点也不是边界点</p>
+</li>
+<li>
+<p>点关系：dbscan中的点关系包括密度直达、密度可达和密度相连。这些关系定义了如何从一个核心点扩展至整个簇。</p>
+</li>
+</ol>
+<p>这里可能说的比较官方，实际上网上也会有很多关于dbscan聚类算法的解释，就不在这里再多赘述了。</p>
+<h1>代码仿真</h1>
+<h2 id="clusterprocess-m文件">clusterProcess.m文件</h2>
+<p>clusterProcess.m文件是聚类的核心主函数，调用dbscanCore核心函数，计算聚类信息函数，以及聚类合并函数</p>
+<p>代码如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span><br><span class="line">%%点云处理模块</span><br><span class="line">%%1. dbscan聚类</span><br><span class="line">%%2. 计算聚类信息</span><br><span class="line">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span><br><span class="line">function [parameter,pointList] = clusterProcess(parameter,pointList,pointNums)</span><br><span class="line">    %% dbscan聚类</span><br><span class="line">    [pointList,clusterNums] = dbscanCore(parameter.clusterPara,pointList,pointNums);</span><br><span class="line">    %% 计算聚类信息</span><br><span class="line">    parameter = calClusterMsg(parameter,pointList,pointNums,clusterNums);</span><br><span class="line">    %% 聚类合并</span><br><span class="line">    if parameter.frameCount ~= 1 %后面进行聚类合并</span><br><span class="line">        parameter = clusterMergeCluster(parameter);</span><br><span class="line">    else %第一帧聚类直接赋值</span><br><span class="line">        parameter = clusterEqualNewCluster(parameter);</span><br><span class="line">    end</span><br><span class="line">end</span><br></pre></td></tr></table></figure>
+<h2 id="dbscancore-m文件">dbscanCore.m文件</h2>
+<p>dbscanCore.m文件是聚类核心函数，将点云通过聚类算法划分为不同的类别</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line">%% dbscan聚类核心函数</span><br><span class="line">function [pointList,clusterNums] = dbscanCore(clusterPara,pointList,pointNums)</span><br><span class="line"></span><br><span class="line">    [pointDistance] = calPointEuclideanDistance(pointList,pointNums); %计算点云的距离速度角度欧式距离</span><br><span class="line">    clusterNums = 0; %聚类数目初始化</span><br><span class="line">    IDX=zeros(pointNums,1);</span><br><span class="line">    pointIsVisited = zeros(pointNums,1); %初始化所有点云都未被初始化</span><br><span class="line"></span><br><span class="line">    for pointIdx = 1:1:pointNums %循环所有点</span><br><span class="line"></span><br><span class="line">        if ~pointIsVisited(pointIdx) %当前点没被访问过</span><br><span class="line">            </span><br><span class="line">            pointIsVisited(pointIdx) = 1; %标记当前点被访问过</span><br><span class="line">            neighbor = getPointNeighbor(pointDistance,pointIdx,clusterPara); %获取领域点数</span><br><span class="line">            neighborNums = numel(neighbor); %领域点数</span><br><span class="line">            if neighborNums &lt; clusterPara.minPoints %领域点数小于阈值</span><br><span class="line">            else %领域点数大于阈值</span><br><span class="line">                clusterNums = clusterNums + 1; %聚类数目增加</span><br><span class="line">                expandCluster(pointIdx,neighbor,clusterNums); %根据当前点访问领域点扩充</span><br><span class="line">            end</span><br><span class="line">        end</span><br><span class="line">    end</span><br><span class="line">    </span><br><span class="line">    function expandCluster(pointIdx,neighbor,clusterNums)</span><br><span class="line">        IDX(pointIdx)=clusterNums; %标记当前点云属于几号聚类</span><br><span class="line">        pointList(pointIdx).clusterId = clusterNums; %标记当前点云属于几号聚类</span><br><span class="line">        count = 1; %计数器</span><br><span class="line">        while true</span><br><span class="line">            </span><br><span class="line">            pointIdxTmp = neighbor(count); %获取领域中的其他点云ID</span><br><span class="line">            if ~pointIsVisited(pointIdxTmp) %该点云没有被访问过</span><br><span class="line">                pointIsVisited(pointIdxTmp) = 1; %标记其被访问过</span><br><span class="line">                neighbor2 = getPointNeighbor(pointDistance,pointIdxTmp,clusterPara); %获取pointIdxTmp的领域点数</span><br><span class="line">                neighbor2Nums = numel(neighbor2); %领域点数</span><br><span class="line">                if neighbor2Nums &gt;= clusterPara.minPoints %领域点数大于阈值</span><br><span class="line">                    neighbor = [neighbor,neighbor2]; %扩充neighbor</span><br><span class="line">                end</span><br><span class="line">            end</span><br><span class="line">            if IDX(pointIdxTmp)==0 %当前点属于空闲点</span><br><span class="line">                IDX(pointIdxTmp)=clusterNums; %标记为几号聚类</span><br><span class="line">                pointList(pointIdxTmp).clusterId = clusterNums; %标记为几号聚类</span><br><span class="line">            end</span><br><span class="line">            count = count + 1; %计数器累加</span><br><span class="line">            </span><br><span class="line">            if count &gt; numel(neighbor) %循环完毕所有邻域中的点云</span><br><span class="line">                break;</span><br><span class="line">            end</span><br><span class="line">        end</span><br><span class="line">    end</span><br><span class="line">end</span><br></pre></td></tr></table></figure>
+<h2 id="calpointeuclideandistance-m文件">calPointEuclideanDistance.m文件</h2>
+<p>calPointEuclideanDistance.m文件是计算点云与点云之间的欧式距离</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span><br><span class="line">%%计算距离、速度、角度的欧式距离</span><br><span class="line">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span><br><span class="line">function [pointDistance] = calPointEuclideanDistance(pointList,pointNums)</span><br><span class="line"></span><br><span class="line">    for pointIdxI = 1:1:pointNums</span><br><span class="line">        for pointIdxJ = 1:1:pointNums</span><br><span class="line">            %距离欧式距离</span><br><span class="line">            pointDistance.rangeD(pointIdxI,pointIdxJ) = ...</span><br><span class="line">                sqrt((abs(pointList(pointIdxI).range)-abs(pointList(pointIdxJ).range)).^2);</span><br><span class="line">            %速度欧式距离</span><br><span class="line">            pointDistance.speedD(pointIdxI,pointIdxJ) = ...</span><br><span class="line">                sqrt((abs(pointList(pointIdxI).speed)-abs(pointList(pointIdxJ).speed)).^2);</span><br><span class="line">            %角度欧式距离</span><br><span class="line">            pointDistance.angleD(pointIdxI,pointIdxJ) = ...</span><br><span class="line">                sqrt((abs(pointList(pointIdxI).angle)-abs(pointList(pointIdxJ).angle)).^2);</span><br><span class="line">        end</span><br><span class="line">    end</span><br><span class="line"></span><br><span class="line">end</span><br></pre></td></tr></table></figure>
+<h2 id="getpointneighbor-m文件">getPointNeighbor.m文件</h2>
+<p>getPointNeighbor.m文件是获取当前点的邻域信息</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">%% 获取当前点的领域信息</span><br><span class="line">function neighbor = getPointNeighbor(pointDistance,currPointIdx,clusterPara)</span><br><span class="line"></span><br><span class="line">    neighbor = [];</span><br><span class="line">    pointRangeDistance = pointDistance.rangeD;[rangeRow,rangeCol] = size(pointRangeDistance);</span><br><span class="line">    pointSpeedDistance = pointDistance.speedD;[speedRow,speedCol] = size(pointSpeedDistance);</span><br><span class="line">    pointAngleDistance = pointDistance.angleD;[angleRow,angleCol] = size(pointAngleDistance);</span><br><span class="line">    if (rangeCol == speedCol) &amp;&amp; (rangeCol == angleCol) &amp;&amp; (speedCol &amp;&amp; angleCol)</span><br><span class="line">        for colIdx = 1:1:rangeCol</span><br><span class="line">            if pointRangeDistance(currPointIdx,colIdx) &lt; clusterPara.rangeThreshold &amp;&amp; ...</span><br><span class="line">                pointSpeedDistance(currPointIdx,colIdx) &lt; clusterPara.speedThreshold &amp;&amp; ...</span><br><span class="line">                pointAngleDistance(currPointIdx,colIdx) &lt; clusterPara.angleThreshold</span><br><span class="line">            </span><br><span class="line">                neighbor = [neighbor, colIdx];</span><br><span class="line">                </span><br><span class="line">            end</span><br><span class="line">        end</span><br><span class="line">    end</span><br><span class="line">end</span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h2 id="clustermergecluster-m">clusterMergeCluster.m</h2>
+<p>clusterMergeCluster.m文件是将新建的聚类和已经存在的聚类斤进行合并</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><span class="line">function parameter = clusterMergeCluster(parameter)</span><br><span class="line"></span><br><span class="line">    distanceThresh = 6; %合并聚类的阈值</span><br><span class="line">%     clusterCurrNums = 0;</span><br><span class="line">    for newClusterIdx = 1:1:parameter.clusterPara.newClusterCurrNums %下一帧形成聚类</span><br><span class="line"></span><br><span class="line">        newLa = parameter.clusterPara.newClusterTarget(newClusterIdx).la;</span><br><span class="line">        newLo = parameter.clusterPara.newClusterTarget(newClusterIdx).lo;</span><br><span class="line">        newVLa = parameter.clusterPara.newClusterTarget(newClusterIdx).V_La;</span><br><span class="line">        newVLo = parameter.clusterPara.newClusterTarget(newClusterIdx).V_Lo;</span><br><span class="line">        maxDistance = 999; %默认最大距离</span><br><span class="line">        updateClusterIdx = -1; %要更新的ID</span><br><span class="line">        distance = -1; %默认距离</span><br><span class="line">        for clusterIdx = 1:1:parameter.clusterPara.clusterCurrNums %已经存在的聚类</span><br><span class="line">                la = parameter.clusterPara.clusterTarget(clusterIdx).la;</span><br><span class="line">                lo = parameter.clusterPara.clusterTarget(clusterIdx).lo;</span><br><span class="line">                vLa = parameter.clusterPara.clusterTarget(clusterIdx).V_La;</span><br><span class="line">                vLo = parameter.clusterPara.clusterTarget(clusterIdx).V_Lo;</span><br><span class="line">                distance = sqrt((abs(la) - abs(newLa)).^2 + (abs(lo) - abs(newLo)).^2 + ...</span><br><span class="line">                    (abs(vLa) - abs(newVLa)).^2 + (abs(vLo) - abs(newVLo)).^2);</span><br><span class="line">                if distance &lt; maxDistance &amp;&amp; distance &lt; distanceThresh %取最小值</span><br><span class="line">                    updateClusterIdx = clusterIdx;</span><br><span class="line">%                     distance = maxDistance;</span><br><span class="line">                    maxDistance = distance;</span><br><span class="line">                end</span><br><span class="line">        end</span><br><span class="line">        if updateClusterIdx == -1 %新建聚类</span><br><span class="line">                clusterCurrNums = parameter.clusterPara.clusterCurrNums + 1; %TODO</span><br><span class="line">                parameter.clusterPara.clusterTarget(clusterCurrNums) = ...</span><br><span class="line">                    parameter.clusterPara.newClusterTarget(newClusterIdx); %聚类赋值</span><br><span class="line">                parameter.clusterPara.newClusterTarget(clusterCurrNums).isMerge = 2;</span><br><span class="line">        else  %以前存在的聚类</span><br><span class="line">            isMerge = parameter.clusterPara.newClusterTarget(updateClusterIdx).isMerge; %获取合并标志</span><br><span class="line">            if isMerge == 0 %表明聚类没有合并过</span><br><span class="line">                count = parameter.clusterPara.clusterTarget(updateClusterIdx).count; %获取已经存在聚类的出现次数</span><br><span class="line">                parameter.clusterPara.clusterTarget(updateClusterIdx) = ...</span><br><span class="line">                    parameter.clusterPara.newClusterTarget(newClusterIdx); %聚类信息赋值</span><br><span class="line">                parameter.clusterPara.clusterTarget(updateClusterIdx).count = ...</span><br><span class="line">                    count + 1; %标记出现次数增加</span><br><span class="line">                parameter.clusterPara.newClusterTarget(updateClusterIdx).isMerge = 1; %表明新建的聚和以前存在的聚类合并</span><br><span class="line">            end</span><br><span class="line">        end</span><br><span class="line">    end</span><br><span class="line">    parameter.clusterPara.clusterCurrNums = parameter.clusterPara.newClusterCurrNums; %聚类数目更新 TODO</span><br><span class="line">    % 合并标志重新赋值为0</span><br><span class="line">    for newClusterIdx = 1:1:parameter.clusterPara.newClusterCurrNums</span><br><span class="line">        parameter.clusterPara.newClusterTarget(newClusterIdx).isMerge = 0;</span><br><span class="line">    end</span><br><span class="line">end</span><br></pre></td></tr></table></figure>
+<h2 id="calclustermsg-m文件">calClusterMsg.m文件</h2>
+<p>calClusterMsg.m文件计算聚类结果的信息</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br></pre></td><td class="code"><pre><span class="line">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span><br><span class="line">%%计算聚类相关信息</span><br><span class="line">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span><br><span class="line">function parameter = calClusterMsg(parameter,pointList,pointNums,clusterNums)</span><br><span class="line"></span><br><span class="line">    for clusterIdx = 1:1:clusterNums</span><br><span class="line">       %% 初始信息初始化</span><br><span class="line">        pointLa = 0; %点云纵距和</span><br><span class="line">        pointLo = 0; %点云横距和</span><br><span class="line">        pointVLa = 0; %点云纵向速度和</span><br><span class="line">        pointVLo = 0; %点云横向速度和</span><br><span class="line">        pointCount = 0; %点云总数</span><br><span class="line">       %% 统计当前聚类所有点云的点云数、横距、纵距、纵向速度、横向速度的和</span><br><span class="line">        for pointIdx = 1:1:pointNums </span><br><span class="line">            if pointList(pointIdx).clusterId == clusterIdx</span><br><span class="line">                pointCount = pointCount + 1;</span><br><span class="line">                pointLa = pointLa + pointList(pointIdx).la;</span><br><span class="line">                pointLo = pointLo + pointList(pointIdx).lo;</span><br><span class="line">                pointVLa = pointVLa + pointList(pointIdx).V_La;</span><br><span class="line">                pointVLo = pointVLo + pointList(pointIdx).V_Lo;</span><br><span class="line">            end</span><br><span class="line">        end</span><br><span class="line">       %% 信息赋值</span><br><span class="line">        parameter.clusterPara.newClusterTarget(clusterIdx).pointNums = pointCount; %点云数赋值</span><br><span class="line">        parameter.clusterPara.newClusterTarget(clusterIdx).count = 1; %聚类计数值每次都初始化为1</span><br><span class="line">        parameter.clusterPara.newClusterTarget(clusterIdx).V_La = pointVLa / pointCount; %纵向速度平均</span><br><span class="line">        parameter.clusterPara.newClusterTarget(clusterIdx).V_Lo = pointVLo / pointCount; %横向速度平均</span><br><span class="line">        </span><br><span class="line">        parameter.clusterPara.newClusterTarget(clusterIdx).la = pointLa / pointCount; %纵距平均</span><br><span class="line">        parameter.clusterPara.newClusterTarget(clusterIdx).lo = pointLo / pointCount; %横距平均</span><br><span class="line">       %% 聚类四个角度赋值</span><br><span class="line">        parameter.clusterPara.newClusterTarget(clusterIdx).leftUPCornerLa = ...</span><br><span class="line">            parameter.clusterPara.newClusterTarget(clusterIdx).la + 1.5;</span><br><span class="line">        parameter.clusterPara.newClusterTarget(clusterIdx).leftUPCornerLo = ...</span><br><span class="line">            parameter.clusterPara.newClusterTarget(clusterIdx).lo - 1.5;</span><br><span class="line">        </span><br><span class="line">        parameter.clusterPara.newClusterTarget(clusterIdx).rightUPCornerLa = ...</span><br><span class="line">            parameter.clusterPara.newClusterTarget(clusterIdx).la + 1.5;</span><br><span class="line">        parameter.clusterPara.newClusterTarget(clusterIdx).rightUPCornerLo = ...</span><br><span class="line">            parameter.clusterPara.newClusterTarget(clusterIdx).lo + 1.5;</span><br><span class="line">        </span><br><span class="line">        parameter.clusterPara.newClusterTarget(clusterIdx).leftDownCornerLa = ...</span><br><span class="line">            parameter.clusterPara.newClusterTarget(clusterIdx).la - 1.5;</span><br><span class="line">        parameter.clusterPara.newClusterTarget(clusterIdx).leftDownCornerLo = ...</span><br><span class="line">            parameter.clusterPara.newClusterTarget(clusterIdx).lo - 1.5;</span><br><span class="line"></span><br><span class="line">        parameter.clusterPara.newClusterTarget(clusterIdx).rightDownCornerLa = ...</span><br><span class="line">            parameter.clusterPara.newClusterTarget(clusterIdx).la - 1.5;</span><br><span class="line">        parameter.clusterPara.newClusterTarget(clusterIdx).rightDownCornerLo = ...</span><br><span class="line">            parameter.clusterPara.newClusterTarget(clusterIdx).lo + 1.5;</span><br><span class="line">       %% 赋值给newClusterCurrNums</span><br><span class="line">        parameter.clusterPara.newClusterCurrNums = clusterNums;</span><br><span class="line"></span><br><span class="line">    end</span><br><span class="line">    </span><br><span class="line">end</span><br></pre></td></tr></table></figure>
+<h2 id="运行结果如下：">运行结果如下：</h2>
+<img src="/2025/04/20/radar/DDMA/DDMA%20signal&data%20Process(7)/3.png" class="" title="放置图片">
+<p><strong>至此，本片文章就此结束了。</strong></p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          
+
+<div class="post-copyright">
+<ul>
+  <li class="post-copyright-author">
+      <strong>本文作者： </strong>xiaojie
+  </li>
+  <li class="post-copyright-link">
+      <strong>本文链接：</strong>
+      <a href="https://xxiaojie.github.io/2025/04/20/radar/DDMA/DDMA%20signal&data%20Process(7)/" title="DDMA signal&amp;data Process(7)">https://xxiaojie.github.io/2025/04/20/radar/DDMA/DDMA signal&data Process(7)/</a>
+  </li>
+  <li class="post-copyright-license">
+      <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2025/04/20/radar/DDMA/DDMA%20signal&data%20Process(6)/" rel="prev" title="DDMA signal&amp;data Process(6)">
+                  <i class="fa fa-angle-left"></i> DDMA signal&data Process(6)
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2025/04/20/radar/DDMA/DDMA%20signal&data%20Process(8)/" rel="next" title="DDMA signal&amp;data Process(8)">
+                  DDMA signal&data Process(8) <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">xiaojie</span>
+  </div>
+<div class="wordcount">
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-line"></i>
+    </span>
+      <span>站点总字数：</span>
+    <span title="站点总字数">39k</span>
+  </span>
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span>站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">35 分钟</span>
+  </span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

@@ -19,24 +19,29 @@
 
 <script class="next-config" data-name="main" type="application/json">{"hostname":"xxiaojie.github.io","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.23.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":false,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
 
-    <meta name="description" content="分享雷达知识">
-<meta property="og:type" content="website">
-<meta property="og:title" content="xiaojie雷达说">
-<meta property="og:url" content="https://xxiaojie.github.io/index.html">
+    <meta name="description" content="Hello，大家好，我是Xiaojie，好久不见，欢迎大家能够和Xiaojie一起学习毫米波雷达知识，Xiaojie准备连载一个系列的文章—DDMA信号处理以及数据处理的流程，本系列文章将从目标生成、信号仿真、测距、测速、cfar检测、测角、目标聚类、目标跟踪这几个模块逐步介绍，这个系列的文章大约是一个7-8篇左右。 最终效果如下：  整体文件的目录树如下：  本篇文章主要讲的是目标生成的部分。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="DDMA signal&amp;data Process(2)">
+<meta property="og:url" content="https://xxiaojie.github.io/2025/04/20/radar/DDMA/DDMA%20signal&data%20Process(2)/index.html">
 <meta property="og:site_name" content="xiaojie雷达说">
-<meta property="og:description" content="分享雷达知识">
+<meta property="og:description" content="Hello，大家好，我是Xiaojie，好久不见，欢迎大家能够和Xiaojie一起学习毫米波雷达知识，Xiaojie准备连载一个系列的文章—DDMA信号处理以及数据处理的流程，本系列文章将从目标生成、信号仿真、测距、测速、cfar检测、测角、目标聚类、目标跟踪这几个模块逐步介绍，这个系列的文章大约是一个7-8篇左右。 最终效果如下：  整体文件的目录树如下：  本篇文章主要讲的是目标生成的部分。">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://xxiaojie.github.io/2025/04/20/radar/DDMA/DDMA%20signal&data%20Process(2)/1.gif">
+<meta property="og:image" content="https://xxiaojie.github.io/2025/04/20/radar/DDMA/DDMA%20signal&data%20Process(2)/2.png">
+<meta property="article:published_time" content="2025-04-20T06:27:14.000Z">
+<meta property="article:modified_time" content="2025-04-20T06:27:53.564Z">
 <meta property="article:author" content="xiaojie">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://xxiaojie.github.io/2025/04/20/radar/DDMA/DDMA%20signal&data%20Process(2)/1.gif">
 
 
-<link rel="canonical" href="https://xxiaojie.github.io/">
+<link rel="canonical" href="https://xxiaojie.github.io/2025/04/20/radar/DDMA/DDMA%20signal&data%20Process(2)/">
 
 
-<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":true,"isPost":false,"lang":"zh-CN","comments":"","permalink":"","path":"index.html","title":""}</script>
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://xxiaojie.github.io/2025/04/20/radar/DDMA/DDMA%20signal&data%20Process(2)/","path":"2025/04/20/radar/DDMA/DDMA signal&data Process(2)/","title":"DDMA signal&data Process(2)"}</script>
 
 <script class="next-config" data-name="calendar" type="application/json">""</script>
-<title>xiaojie雷达说</title>
+<title>DDMA signal&data Process(2) | xiaojie雷达说</title>
   
 
 
@@ -93,7 +98,7 @@
 
     <a href="/" class="brand" rel="start">
       <i class="logo-line"></i>
-      <h1 class="site-title">xiaojie雷达说</h1>
+      <p class="site-title">xiaojie雷达说</p>
       <i class="logo-line"></i>
     </a>
   </div>
@@ -119,7 +124,7 @@
   
   <aside class="sidebar">
 
-    <div class="sidebar-inner sidebar-overview-active">
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
       <ul class="sidebar-nav">
         <li class="sidebar-nav-toc">
           文章目录
@@ -132,6 +137,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">generateRandFrame.m介绍</span></a></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">2.</span> <span class="nav-text">generateNewTarget.m介绍</span></a></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">3.</span> <span class="nav-text">targetUpdate.m介绍</span></a></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">4.</span> <span class="nav-text">generateMovingTarget.m介绍</span></a></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -171,16 +177,17 @@
 
     </div>
 
-    <div class="main-inner index posts-expand">
+    <div class="main-inner post posts-expand">
 
-    
+
+  
 
 
 <div class="post-block">
   
   
 
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://xxiaojie.github.io/2025/04/20/radar/DDMA/DDMA%20signal&data%20Process(2)/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -194,13 +201,13 @@
     </span>
 
     <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content=" | xiaojie雷达说">
+      <meta itemprop="name" content="DDMA signal&amp;data Process(2) | xiaojie雷达说">
       <meta itemprop="description" content="">
     </span>
       <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2025/04/20/radar/DDMA/DDMA%20signal&data%20Process(2)/" class="post-title-link" itemprop="url">DDMA signal&data Process(2)</a>
-        </h2>
+        <h1 class="post-title" itemprop="name headline">
+          DDMA signal&data Process(2)
+        </h1>
 
         <div class="post-meta-container">
           <div class="post-meta">
@@ -228,6 +235,13 @@
     </span>
 
   
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
     <span class="post-meta-break"></span>
     <span class="post-meta-item" title="本文字数">
       <span class="post-meta-item-icon">
@@ -251,8 +265,7 @@
     
     
     
-    <div class="post-body" itemprop="articleBody">
-          <p>Hello，大家好，我是Xiaojie，好久不见，欢迎大家能够和Xiaojie一起学习毫米波雷达知识，Xiaojie准备连载一个系列的文章—DDMA信号处理以及数据处理的流程，本系列文章将从目标生成、信号仿真、测距、测速、cfar检测、测角、目标聚类、目标跟踪这几个模块逐步介绍，这个系列的文章大约是一个7-8篇左右。</p>
+    <div class="post-body" itemprop="articleBody"><p>Hello，大家好，我是Xiaojie，好久不见，欢迎大家能够和Xiaojie一起学习毫米波雷达知识，Xiaojie准备连载一个系列的文章—DDMA信号处理以及数据处理的流程，本系列文章将从目标生成、信号仿真、测距、测速、cfar检测、测角、目标聚类、目标跟踪这几个模块逐步介绍，这个系列的文章大约是一个7-8篇左右。</p>
 <p>最终效果如下：</p>
 <img src="/2025/04/20/radar/DDMA/DDMA%20signal&data%20Process(2)/1.gif" class="" title="放置图片">
 <p>整体文件的目录树如下：</p>
@@ -273,7 +286,6 @@
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">%% 生成动态目标</span><br><span class="line">function [parameter,target] = generateMovingTarget(parameter,target)</span><br><span class="line">    </span><br><span class="line">    parameter.frameNumLoops = parameter.frameNumLoops - 1; %frameNumLoops</span><br><span class="line">    % 如果frameNumLoops为0，则生成新的目标</span><br><span class="line">    if parameter.frameNumLoops == 0</span><br><span class="line">        newTarget = generateNewTarget(); % 生成新目标</span><br><span class="line">        parameter.targetNums = parameter.targetNums + 1; %目标数增加</span><br><span class="line">        target = [target ; newTarget]; %target更新</span><br><span class="line">        parameter.frameNumLoops = generateRandFrame(); %生成随机帧号</span><br><span class="line">    end</span><br><span class="line">    target = targetUpdate(parameter,target); %目标信息更新</span><br><span class="line"></span><br><span class="line">end</span><br></pre></td></tr></table></figure>
 <p><strong>至此，本片文章就此结束了。</strong></p>
 
-      
     </div>
 
     
@@ -281,150 +293,39 @@
     
 
     <footer class="post-footer">
-        <div class="post-eof"></div>
-      
+          
+
+<div class="post-copyright">
+<ul>
+  <li class="post-copyright-author">
+      <strong>本文作者： </strong>xiaojie
+  </li>
+  <li class="post-copyright-link">
+      <strong>本文链接：</strong>
+      <a href="https://xxiaojie.github.io/2025/04/20/radar/DDMA/DDMA%20signal&data%20Process(2)/" title="DDMA signal&amp;data Process(2)">https://xxiaojie.github.io/2025/04/20/radar/DDMA/DDMA signal&data Process(2)/</a>
+  </li>
+  <li class="post-copyright-license">
+      <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2025/04/17/radar/DDMA/DDMA%20signal&data%20Process(1)/" rel="prev" title="DDMA signal&amp;data Process(1)">
+                  <i class="fa fa-angle-left"></i> DDMA signal&data Process(1)
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
     </footer>
   </article>
 </div>
 
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="https://xxiaojie.github.io/2025/04/17/radar/DDMA/DDMA%20signal&data%20Process(1)/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/xiaojie.png">
-      <meta itemprop="name" content="xiaojie">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="xiaojie雷达说">
-      <meta itemprop="description" content="分享雷达知识">
-    </span>
-
-    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content=" | xiaojie雷达说">
-      <meta itemprop="description" content="">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2025/04/17/radar/DDMA/DDMA%20signal&data%20Process(1)/" class="post-title-link" itemprop="url">DDMA signal&data Process(1)</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2025-04-17 23:19:14" itemprop="dateCreated datePublished" datetime="2025-04-17T23:19:14+08:00">2025-04-17</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar-check"></i>
-      </span>
-      <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2025-04-19 21:52:33" itemprop="dateModified" datetime="2025-04-19T21:52:33+08:00">2025-04-19</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">分类于</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/radar/" itemprop="url" rel="index"><span itemprop="name">radar</span></a>
-        </span>
-          ，
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/radar/DDMA-radar/" itemprop="url" rel="index"><span itemprop="name">DDMA radar</span></a>
-        </span>
-    </span>
-
-  
-    <span class="post-meta-break"></span>
-    <span class="post-meta-item" title="本文字数">
-      <span class="post-meta-item-icon">
-        <i class="far fa-file-word"></i>
-      </span>
-      <span class="post-meta-item-text">本文字数：</span>
-      <span>2.2k</span>
-    </span>
-    <span class="post-meta-item" title="阅读时长">
-      <span class="post-meta-item-icon">
-        <i class="far fa-clock"></i>
-      </span>
-      <span class="post-meta-item-text">阅读时长 &asymp;</span>
-      <span>2 分钟</span>
-    </span>
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <p>Hello，大家好，我是Xiaojie，好久不见，欢迎大家能够和Xiaojie一起学习毫米波雷达知识，Xiaojie准备连载一个系列的文章—DDMA信号处理以及数据处理的流程，本系列文章将从目标生成、信号仿真、测距、测速、cfar检测、测角、目标聚类、目标跟踪这几个模块逐步介绍，这个系列的文章大约是一个7-8篇左右。</p>
-<p>最终效果如下：</p>
-<img src="/2025/04/17/radar/DDMA/DDMA%20signal&data%20Process(1)/1.gif" class="" title="放置图片">
-<p>本篇文章主要讲的是DDMA原理性的部分。</p>
-<h2 id="ddma波形">DDMA波形</h2>
-<p>DDMA波形下所有发射天线同时发射，但是每个发射天线的信号都偏移一个特定的频率，通过这个外部偏移的频率使不同发射天线的信号在doppler域上能分离开来。</p>
-<p>不同发射天线上的频率偏移是通过在chirp之间上施加不同的相位旋转来实现的，但是在chirp内信号的相位是不变的。</p>
-<p>假如发射天线总共有<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>N</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">N_t</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.10903em;">N</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2805559999999999em;"><span style="top:-2.5500000000000003em;margin-left:-0.10903em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span>根发射天线，对于发射天线k，在相邻chirp上施加的相移<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>ω</mi><mi>k</mi></msub></mrow><annotation encoding="application/x-tex">\omega _k</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.58056em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.03588em;">ω</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.33610799999999996em;"><span style="top:-2.5500000000000003em;margin-left:-0.03588em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight" style="margin-right:0.03148em;">k</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span>由下式决定：</p>
-<p class='katex-block'><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>ω</mi><mi>k</mi></msub><mo>=</mo><mfrac><mrow><mn>2</mn><mi>π</mi><mo stretchy="false">(</mo><mi>k</mi><mo>−</mo><mn>1</mn><mo stretchy="false">)</mo></mrow><msub><mi>N</mi><mi>t</mi></msub></mfrac><mtext>，</mtext><mi>k</mi><mo>=</mo><mn>1</mn><mo separator="true">,</mo><mo>…</mo><mo>…</mo><mo separator="true">,</mo><msub><mi>N</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">\omega_k=\frac{2\pi (k-1)}{N_t}，k=1,……,N_t
-</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.58056em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.03588em;">ω</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.33610799999999996em;"><span style="top:-2.5500000000000003em;margin-left:-0.03588em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight" style="margin-right:0.03148em;">k</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:2.263em;vertical-align:-0.8360000000000001em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.427em;"><span style="top:-2.3139999999999996em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"><span class="mord mathdefault" style="margin-right:0.10903em;">N</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2805559999999999em;"><span style="top:-2.5500000000000003em;margin-left:-0.10903em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">2</span><span class="mord mathdefault" style="margin-right:0.03588em;">π</span><span class="mopen">(</span><span class="mord mathdefault" style="margin-right:0.03148em;">k</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mord">1</span><span class="mclose">)</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.8360000000000001em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mord cjk_fallback">，</span><span class="mord mathdefault" style="margin-right:0.03148em;">k</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.8777699999999999em;vertical-align:-0.19444em;"></span><span class="mord">1</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="minner">…</span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="minner">…</span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.10903em;">N</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2805559999999999em;"><span style="top:-2.5500000000000003em;margin-left:-0.10903em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></span></p>
-<p>发射天线数量为3根时，具体表现如下图所示(图片来源于TI文档)：</p>
-<img src="/2025/04/17/radar/DDMA/DDMA%20signal&data%20Process(1)/2.png" class="" title="放置图片">
-<p>当目标的速度超过一定的范围时，就无法根据子带的位置去分离不同的发射天线数据，就会产生DDMA的速度模糊问题。</p>
-<h2 id="ddma速度解模糊">DDMA速度解模糊</h2>
-<p>为解决DDMA速度模糊的问题，TI采用的是一种基于空子带的解速度模糊的方法。</p>
-<p>在相邻chirp上施加的相移<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>ω</mi><mi>k</mi></msub></mrow><annotation encoding="application/x-tex">\omega _k</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.58056em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.03588em;">ω</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.33610799999999996em;"><span style="top:-2.5500000000000003em;margin-left:-0.03588em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight" style="margin-right:0.03148em;">k</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span>修改为：</p>
-<p class='katex-block'><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>ω</mi><mi>k</mi></msub><mo>=</mo><mfrac><mrow><mn>2</mn><mi>π</mi><mo stretchy="false">(</mo><mi>k</mi><mo>−</mo><mn>1</mn><mo stretchy="false">)</mo></mrow><mrow><msub><mi>N</mi><mi>t</mi></msub><mo>+</mo><msub><mi>N</mi><mrow><mi>e</mi><mi>m</mi><mi>p</mi><mi>t</mi><mi>y</mi></mrow></msub></mrow></mfrac><mtext>，</mtext><mi>k</mi><mo>=</mo><mn>1</mn><mo separator="true">,</mo><mo>…</mo><mo>…</mo><mo separator="true">,</mo><msub><mi>N</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">\omega_k=\frac{2\pi (k-1)}{N_t+N_{empty}}，k=1,……,N_t
-</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.58056em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.03588em;">ω</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.33610799999999996em;"><span style="top:-2.5500000000000003em;margin-left:-0.03588em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight" style="margin-right:0.03148em;">k</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:2.399108em;vertical-align:-0.972108em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.427em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"><span class="mord mathdefault" style="margin-right:0.10903em;">N</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2805559999999999em;"><span style="top:-2.5500000000000003em;margin-left:-0.10903em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.10903em;">N</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.28055599999999997em;"><span style="top:-2.5500000000000003em;margin-left:-0.10903em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight">e</span><span class="mord mathdefault mtight">m</span><span class="mord mathdefault mtight">p</span><span class="mord mathdefault mtight">t</span><span class="mord mathdefault mtight" style="margin-right:0.03588em;">y</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.286108em;"><span></span></span></span></span></span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">2</span><span class="mord mathdefault" style="margin-right:0.03588em;">π</span><span class="mopen">(</span><span class="mord mathdefault" style="margin-right:0.03148em;">k</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mord">1</span><span class="mclose">)</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.972108em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mord cjk_fallback">，</span><span class="mord mathdefault" style="margin-right:0.03148em;">k</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.8777699999999999em;vertical-align:-0.19444em;"></span><span class="mord">1</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="minner">…</span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="minner">…</span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.10903em;">N</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2805559999999999em;"><span style="top:-2.5500000000000003em;margin-left:-0.10903em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></span></p>
-<p><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>N</mi><mrow><mi>e</mi><mi>m</mi><mi>p</mi><mi>t</mi><mi>y</mi></mrow></msub></mrow><annotation encoding="application/x-tex">N_{empty}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.969438em;vertical-align:-0.286108em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.10903em;">N</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.28055599999999997em;"><span style="top:-2.5500000000000003em;margin-left:-0.10903em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight">e</span><span class="mord mathdefault mtight">m</span><span class="mord mathdefault mtight">p</span><span class="mord mathdefault mtight">t</span><span class="mord mathdefault mtight" style="margin-right:0.03588em;">y</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.286108em;"><span></span></span></span></span></span></span></span></span></span>为空子带的数量</p>
-<p>发射天线数量为4根，空子带数量为2时，具体表现如下图所示(图片来源于TI文档)：</p>
-<img src="/2025/04/17/radar/DDMA/DDMA%20signal&data%20Process(1)/3.png" class="" title="放置图片">
-<h2 id="ddma信号仿真">DDMA信号仿真</h2>
-<p>对DDMA信号进行仿真，参数如下：</p>
-<pre><code>发射天线数量：4，
-空子带数量：2，
-chirp数量：384，
-</code></pre>
-<p>结果如下：</p>
-<img src="/2025/04/17/radar/DDMA/DDMA%20signal&data%20Process(1)/4.png" class="" title="放置图片">
-<p>代码如下：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">clc;close all;clear;</span><br><span class="line">chirpNums = 384;</span><br><span class="line">txAntennas = 4;</span><br><span class="line">emptySuband = 2;</span><br><span class="line">i = 1:1:chirpNums;</span><br><span class="line">j = 1:1:txAntennas;</span><br><span class="line">phi = zeros(chirpNums,txAntennas);</span><br><span class="line">S = zeros(chirpNums, 1);</span><br><span class="line"></span><br><span class="line">for i_index= 1:1:chirpNums</span><br><span class="line">    for j_index = 1:1:txAntennas</span><br><span class="line">        phi (i_index,j_index)= mod(360*(i_index-1)*(j_index-1)/(txAntennas+emptySuband),360);</span><br><span class="line">    end</span><br><span class="line">end</span><br><span class="line">s1(:,1)= cosd(phi(:, 1));</span><br><span class="line">s2(:,1)= cosd(phi(:, 2));</span><br><span class="line">s3(:,1)= cosd(phi(:, 3));</span><br><span class="line">s4(:,1)= cosd(phi(:, 4));</span><br><span class="line">figure;</span><br><span class="line">subplot(4,2,1);plot(((s1)));xlabel(&#x27;chirp数&#x27;);ylabel(&#x27;幅值&#x27;);title(&#x27;tx0天线时域信号&#x27;)</span><br><span class="line">subplot(4,2,3);plot(((s2)));xlabel(&#x27;chirp数&#x27;);ylabel(&#x27;幅值&#x27;);title(&#x27;tx1天线时域信号&#x27;)</span><br><span class="line">subplot(4,2,5);plot(((s3)));xlabel(&#x27;chirp数&#x27;);ylabel(&#x27;幅值&#x27;);title(&#x27;tx2天线时域信号&#x27;)</span><br><span class="line">subplot(4,2,7);plot(((s4)));xlabel(&#x27;chirp数&#x27;);ylabel(&#x27;幅值&#x27;);title(&#x27;tx3天线时域信号&#x27;)</span><br><span class="line">subplot(4,2,2);plot(abs(fft(s1)));xlabel(&#x27;chirp数&#x27;);ylabel(&#x27;幅值&#x27;);title(&#x27;tx0天线频域信号&#x27;);</span><br><span class="line">subplot(4,2,4);plot(abs(fft(s2)));xlabel(&#x27;chirp数&#x27;);ylabel(&#x27;幅值&#x27;);title(&#x27;tx1天线频域信号&#x27;);</span><br><span class="line">subplot(4,2,6);plot(abs(fft(s3)));xlabel(&#x27;chirp数&#x27;);ylabel(&#x27;幅值&#x27;);title(&#x27;tx2天线频域信号&#x27;);</span><br><span class="line">subplot(4,2,8);plot(abs(fft(s4)));xlabel(&#x27;chirp数&#x27;);ylabel(&#x27;幅值&#x27;);title(&#x27;tx3天线频域信号&#x27;);</span><br></pre></td></tr></table></figure>
-<h2 id="参考文献">参考文献</h2>
-<ol>
-<li>《基于 AWR2944 的汽车雷达 DDMA 波形的原理和实现》</li>
-</ol>
-<p><strong>至此，本片文章就此结束了。</strong></p>
-
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
 
 
 

@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 7.3.0">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha256-dABdfBfUoC8vJUBOwGVdm8L9qlMWaHTIfXt+7GnZCIo=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"xxiaojie.github.io","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.23.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":false,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="Hello，大家好，我是Xiaojie，好久不见，欢迎大家能够和Xiaojie一起学习毫米波雷达知识，这篇文章主要是介绍flash的基本知识以及TI SDK中的qspi驱动。 基础知识 QSPI协议简介 QSPI是Queued SPI的简写，是Motorola公司推出的SPI接口的扩展，比SPI应用更加广泛。在SPI协议的基础上，Motorola公司对其功能进行了增强，增加了队列传输机制，推出了队">
+<meta property="og:type" content="article">
+<meta property="og:title" content="QSPI flash driver">
+<meta property="og:url" content="https://xxiaojie.github.io/2025/04/25/radar/TI/flash/qspi%20flash/index.html">
+<meta property="og:site_name" content="xiaojie雷达说">
+<meta property="og:description" content="Hello，大家好，我是Xiaojie，好久不见，欢迎大家能够和Xiaojie一起学习毫米波雷达知识，这篇文章主要是介绍flash的基本知识以及TI SDK中的qspi驱动。 基础知识 QSPI协议简介 QSPI是Queued SPI的简写，是Motorola公司推出的SPI接口的扩展，比SPI应用更加广泛。在SPI协议的基础上，Motorola公司对其功能进行了增强，增加了队列传输机制，推出了队">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://xxiaojie.github.io/2025/04/25/radar/TI/flash/qspi%20flash/1.png">
+<meta property="og:image" content="https://xxiaojie.github.io/2025/04/25/radar/TI/flash/qspi%20flash/2.png">
+<meta property="og:image" content="https://xxiaojie.github.io/2025/04/25/radar/TI/flash/qspi%20flash/3.png">
+<meta property="article:published_time" content="2025-04-25T15:29:14.000Z">
+<meta property="article:modified_time" content="2025-04-25T13:11:01.587Z">
+<meta property="article:author" content="xiaojie">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://xxiaojie.github.io/2025/04/25/radar/TI/flash/qspi%20flash/1.png">
+
+
+<link rel="canonical" href="https://xxiaojie.github.io/2025/04/25/radar/TI/flash/qspi%20flash/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://xxiaojie.github.io/2025/04/25/radar/TI/flash/qspi%20flash/","path":"2025/04/25/radar/TI/flash/qspi flash/","title":"QSPI flash driver"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>QSPI flash driver | xiaojie雷达说</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/motion.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  
+
+
+
+
+
+
+  
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+  
+
+  <script class="next-config" data-name="enableMath" type="application/json">true</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"none","js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.js","integrity":"sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI="}}</script>
+<script src="/js/third-party/math/mathjax.js" defer></script>
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+<link href="https://cdn.bootcss.com/KaTeX/0.11.1/katex.min.css" rel="stylesheet" /></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">xiaojie雷达说</p>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-about"><a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li><li class="menu-item menu-item-schedule"><a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>日程表</a></li><li class="menu-item menu-item-sitemap"><a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>站点地图</a></li><li class="menu-item menu-item-commonweal"><a href="/404/" rel="section"><i class="fa fa-heartbeat fa-fw"></i>公益 404</a></li>
+  </ul>
+</nav>
+
+
+
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">基础知识</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#qspi%E5%8D%8F%E8%AE%AE%E7%AE%80%E4%BB%8B"><span class="nav-number">1.1.</span> <span class="nav-text">QSPI协议简介</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#qspi%E5%91%BD%E4%BB%A4%E5%BA%8F%E5%88%97"><span class="nav-number">1.2.</span> <span class="nav-text">QSPI命令序列</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">2.</span> <span class="nav-text">TI驱动以及函数代码实现</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#ti%E9%A9%B1%E5%8A%A8%E4%BB%A3%E7%A0%81"><span class="nav-number">2.1.</span> <span class="nav-text">TI驱动代码</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#qspi%E9%A9%B1%E5%8A%A8"><span class="nav-number">2.1.1.</span> <span class="nav-text">QSPI驱动</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#qspi-init"><span class="nav-number">2.1.1.1.</span> <span class="nav-text">QSPI_init</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#qspi-params-init"><span class="nav-number">2.1.1.2.</span> <span class="nav-text">QSPI_Params_init</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#qspi-open"><span class="nav-number">2.1.1.3.</span> <span class="nav-text">QSPI_open</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#qspi-cfgread"><span class="nav-number">2.1.1.4.</span> <span class="nav-text">QSPI_cfgRead</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#qspi-cfgwrite"><span class="nav-number">2.1.1.5.</span> <span class="nav-text">QSPI_cfgWrite</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#qspi-memaccesscfg"><span class="nav-number">2.1.1.6.</span> <span class="nav-text">QSPI_memAccessCfg</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#qspi-isframecompleted"><span class="nav-number">2.1.1.7.</span> <span class="nav-text">QSPI_isFrameCompleted</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#qspi-isbusy"><span class="nav-number">2.1.1.8.</span> <span class="nav-text">QSPI_isBusy</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#qspiflash%E9%A9%B1%E5%8A%A8"><span class="nav-number">2.1.2.</span> <span class="nav-text">QSPIFlash驱动</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#qspiflash-getdeviceid"><span class="nav-number">2.1.2.1.</span> <span class="nav-text">QSPIFlash_getDeviceID</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#qspiflash-writeenable"><span class="nav-number">2.1.2.2.</span> <span class="nav-text">QSPIFlash_writeEnable</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#qspiflash-writedisable"><span class="nav-number">2.1.2.3.</span> <span class="nav-text">QSPIFlash_writeDisable</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#qspiflash-progquadread"><span class="nav-number">2.1.2.4.</span> <span class="nav-text">QSPIFlash_progQuadRead</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#qspiflash-clearblockprotectbits"><span class="nav-number">2.1.2.5.</span> <span class="nav-text">QSPIFlash_clearBlockProtectBits</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#qspiflash-singleread"><span class="nav-number">2.1.2.6.</span> <span class="nav-text">QSPIFlash_singleRead</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#qspiflash-dualread"><span class="nav-number">2.1.2.7.</span> <span class="nav-text">QSPIFlash_dualRead</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#qspiflash-quadread"><span class="nav-number">2.1.2.8.</span> <span class="nav-text">QSPIFlash_quadRead</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#qspiflash-mmapread"><span class="nav-number">2.1.2.9.</span> <span class="nav-text">QSPIFlash_mmapRead</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#qspiflash-singlewrite"><span class="nav-number">2.1.2.10.</span> <span class="nav-text">QSPIFlash_singleWrite</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#qspiflash-mmapwrite"><span class="nav-number">2.1.2.11.</span> <span class="nav-text">QSPIFlash_mmapWrite</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#qspiflash-configmmapread"><span class="nav-number">2.1.2.12.</span> <span class="nav-text">QSPIFlash_configMmapRead</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#qspiflash-configmmapwrite"><span class="nav-number">2.1.2.13.</span> <span class="nav-text">QSPIFlash_configMmapWrite</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#qspiflash-sectorerase"><span class="nav-number">2.1.2.14.</span> <span class="nav-text">QSPIFlash_sectorErase</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#qspiflash-blockerase"><span class="nav-number">2.1.2.15.</span> <span class="nav-text">QSPIFlash_blockErase</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#qspiflash-chiperase"><span class="nav-number">2.1.2.16.</span> <span class="nav-text">QSPIFlash_chipErase</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#qspiflash-init"><span class="nav-number">2.1.2.17.</span> <span class="nav-text">QSPIFlash_init</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#qspiflash-open"><span class="nav-number">2.1.2.18.</span> <span class="nav-text">QSPIFlash_open</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#qspiflash-close"><span class="nav-number">2.1.2.19.</span> <span class="nav-text">QSPIFlash_close</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#qspiflash-getextflashaddr"><span class="nav-number">2.1.2.20.</span> <span class="nav-text">QSPIFlash_getExtFlashAddr</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#qspiflash-sysdmawrite"><span class="nav-number">2.1.2.21.</span> <span class="nav-text">QSPIFlash_sysDmaWrite</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#qspiflash-sysdmaread"><span class="nav-number">2.1.2.22.</span> <span class="nav-text">QSPIFlash_sysDmaRead</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">3.</span> <span class="nav-text">代码案例</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#gpio%E5%A4%8D%E7%94%A8"><span class="nav-number">3.1.</span> <span class="nav-text">GPIO复用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#qspi%E5%92%8Cqspi-flash%E5%88%9D%E5%A7%8B%E5%8C%96"><span class="nav-number">3.2.</span> <span class="nav-text">qspi和qspi flash初始化</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#qspi%E5%92%8Cqspi-flash%E6%89%93%E5%BC%80"><span class="nav-number">3.3.</span> <span class="nav-text">qspi和qspi flash打开</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#flash%E5%86%99%E5%85%A5%E6%95%B0%E6%8D%AE"><span class="nav-number">3.4.</span> <span class="nav-text">flash写入数据</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#flash%E8%AF%BB%E5%8F%96%E6%95%B0%E6%8D%AE"><span class="nav-number">3.5.</span> <span class="nav-text">flash读取数据</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">4.</span> <span class="nav-text">参考文献</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="xiaojie"
+      src="/images/xiaojie.png">
+  <p class="site-author-name" itemprop="name">xiaojie</p>
+  <div class="site-description" itemprop="description">分享雷达知识</div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">10</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="cc-license animated" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" rel="noopener" target="_blank"><img src="https://cdnjs.cloudflare.com/ajax/libs/creativecommons-vocabulary/2020.11.3/assets/license_badges/small/by_nc_sa.svg" alt="Creative Commons"></a>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://xxiaojie.github.io/2025/04/25/radar/TI/flash/qspi%20flash/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/xiaojie.png">
+      <meta itemprop="name" content="xiaojie">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="xiaojie雷达说">
+      <meta itemprop="description" content="分享雷达知识">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="QSPI flash driver | xiaojie雷达说">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          QSPI flash driver
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+      
+
+      <time title="创建时间：2025-04-25 23:29:14 / 修改时间：21:11:01" itemprop="dateCreated datePublished" datetime="2025-04-25T23:29:14+08:00">2025-04-25</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/radar/" itemprop="url" rel="index"><span itemprop="name">radar</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/radar/TI/" itemprop="url" rel="index"><span itemprop="name">TI</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+    <span class="post-meta-break"></span>
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>10k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>9 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>Hello，大家好，我是Xiaojie，好久不见，欢迎大家能够和Xiaojie一起学习毫米波雷达知识，这篇文章主要是介绍flash的基本知识以及TI SDK中的qspi驱动。</p>
+<h1>基础知识</h1>
+<h2 id="qspi协议简介">QSPI协议简介</h2>
+<p>QSPI是Queued SPI的简写，是Motorola公司推出的SPI接口的扩展，比SPI应用更加广泛。在SPI协议的基础上，Motorola公司对其功能进行了增强，增加了队列传输机制，推出了队列串行外围接口协议(即QSPI协议)。QSPI是一种专用的通信接口，连接单、双或四条数据线SPI Flash存储介质。</p>
+<p>该接口可以在一下三种模式下工作：</p>
+<ol>
+<li>
+<p>间接模式：使用QSPI寄存器执行全部操作</p>
+</li>
+<li>
+<p>状态轮询模式：周期性读取外部Flash状态寄存器，而且标志位置1时会产生中断(如擦写或烧写完成，会产生中断)</p>
+</li>
+<li>
+<p>内存映射模式：外部Flash映射到微控制器地址空间，从而系统将其视作内部存储器</p>
+</li>
+</ol>
+<p>QSPI使用6个信号线连接FLash，分别是4根数据线IO0、IO1、IO2、IO3，一根时钟线CLK，一个片选线CS</p>
+<ol>
+<li>
+<p>CS：片选输出(低电平有效)</p>
+</li>
+<li>
+<p>CLK：时钟输出，用于通讯数据同步。由通讯主机产生，决定了通讯的速率，不同的设备支持的最高时钟频率不一样，两个设备之间通讯时，通讯速率受限于低速设备</p>
+</li>
+<li>
+<p>IO0：在双线/四线模式中位双向IO，单线模式中位串行输出</p>
+</li>
+<li>
+<p>IO1：在双线/四线模式中位双向IO，单线模式中为串行输入</p>
+</li>
+<li>
+<p>IO2：在四线模式中为双向IO</p>
+</li>
+<li>
+<p>IO3：在四线模式中为双向IO</p>
+</li>
+</ol>
+<h2 id="qspi命令序列">QSPI命令序列</h2>
+<p>QSPI通过命令与Flash通信，每条命令包括指令、地址、交替字节、空指令和数据这五个阶段，任一阶段均可跳过，但至少要包含指令、地址、交替字节或数据阶段之一。CS在每条指令开始前下降，在每条指令完成后再次上升。下图为QSPI四线模式下的读命令时许。</p>
+<img src="/2025/04/25/radar/TI/flash/qspi%20flash/1.png" class="" title="放置图片">
+<ol>
+<li>指令阶段</li>
+</ol>
+<p>在指令阶段，将配置的一条8位指令发送到Flash，指定待执行的操作。</p>
+<ol start="2">
+<li>地址阶段</li>
+</ol>
+<p>在地址阶段，将1-4字节发送到Flash，指示操作地址。</p>
+<ol start="3">
+<li>交替字节阶段</li>
+</ol>
+<p>在交替字节阶段，将1-4字节发送到Flash，一般用于控制操作模式</p>
+<ol start="4">
+<li>空指令周期阶段</li>
+</ol>
+<p>在空指令周期阶段，给定的1-31个周期内不发送或接收任何数据，目的时当采用更高的时钟频率时，给Flash留出准备数据阶段的时间。</p>
+<ol start="5">
+<li>数据阶段</li>
+</ol>
+<p>在数据阶段，可以从Flash接收或向其发送任意数量的字节</p>
+<h1>TI驱动以及函数代码实现</h1>
+<h2 id="ti驱动代码">TI驱动代码</h2>
+<h3 id="qspi驱动">QSPI驱动</h3>
+<h4 id="qspi-init">QSPI_init</h4>
+<p><strong>函数原型：</strong></p>
+<pre><code>void QSPI_init	(void)	
+</code></pre>
+<p><strong>函数功能：</strong></p>
+<pre><code>QSPI初始化，该函数每个系统只能调用一次且其他QSPI API必须在其之后调用
+</code></pre>
+<p><strong>函数参数：</strong></p>
+<pre><code>无
+</code></pre>
+<p><strong>函数返回值：</strong></p>
+<pre><code>无
+</code></pre>
+<h4 id="qspi-params-init">QSPI_Params_init</h4>
+<p><strong>函数原型：</strong></p>
+<pre><code>void 	QSPI_Params_init (QSPI_Params *params)
+</code></pre>
+<p><strong>函数功能：</strong></p>
+<pre><code>QSPI参数初始化，该函数每个系统只能调用一次且其他QSPI API必须在其之后调用
+</code></pre>
+<p><strong>函数参数：</strong></p>
+<pre><code>params：指向QSPI_Param指针，用于初始化
+</code></pre>
+<p><strong>函数返回值：</strong></p>
+<pre><code>无
+</code></pre>
+<h4 id="qspi-open">QSPI_open</h4>
+<p><strong>函数原型：</strong></p>
+<pre><code>QSPI_Handle QSPI_open(QSPI_Params* params, int32_t* errCode)
+</code></pre>
+<p><strong>函数功能：</strong></p>
+<pre><code>初始化一个给定的QSPI外围设备
+</code></pre>
+<p><strong>函数参数：</strong></p>
+<pre><code>params：用于创建QSPI驱动程序实例的QSPI参数
+errCode：QSPI驱动程序发生错误时的错误码
+</code></pre>
+<p><strong>函数返回值：</strong></p>
+<pre><code>函数执行成功后，返回值为QSPI_Handle；函数发生错误，则返回NULL
+</code></pre>
+<h4 id="qspi-cfgread">QSPI_cfgRead</h4>
+<p><strong>函数原型：</strong></p>
+<pre><code>int32_t QSPI_cfgRead(QSPI_Handle handle,
+                      QSPI_CMD cmd,
+                      QSPI_WORDLEN wordLen,
+                      uint32_t * data,
+                      uint32_t numWords 
+                      )	
+</code></pre>
+<p><strong>函数功能：</strong></p>
+<pre><code>通过配置端口执行QSPI读取
+</code></pre>
+<p><strong>函数参数：</strong></p>
+<pre><code>handle：QSPI句柄
+cmd：QSPI读取命令
+wordLen：QSPI数据字长(bit为单位)
+data：指向data缓冲区，用于保存读取到的数据
+numWords：一帧中要读取的字长数
+</code></pre>
+<p><strong>函数返回值：</strong></p>
+<pre><code>函数执行成功返回值为0，函数执行失败返回值小于0，且返回值表征错误类型
+</code></pre>
+<h4 id="qspi-cfgwrite">QSPI_cfgWrite</h4>
+<p><strong>函数原型：</strong></p>
+<pre><code>int32_t QSPI_cfgWrite(QSPI_Handle handle,
+                  QSPI_CMD cmd,
+                  QSPI_WORDLEN wordLen,
+                  uint32_t * data,
+                  uint32_t numWords 
+                  )	
+</code></pre>
+<p><strong>函数功能：</strong></p>
+<pre><code>通过配置端口执行QSPI写入
+</code></pre>
+<p><strong>函数参数：</strong></p>
+<pre><code>handle：QSPI句柄
+cmd：QSPI写入命令
+wordLen：QSPI数据字长(bit为单位)
+data：要写入的数据
+numWords：一帧中要写入的字长数
+</code></pre>
+<p><strong>函数返回值：</strong></p>
+<pre><code>函数执行成功返回值为0，函数执行失败返回值小于0，且返回值表征错误类型
+</code></pre>
+<h4 id="qspi-memaccesscfg">QSPI_memAccessCfg</h4>
+<p><strong>函数原型：</strong></p>
+<pre><code>void QSPI_memAccessCfg	(QSPI_Handle handle,
+                          QSPI_memConfig * memConfig 
+                          )	
+</code></pre>
+<p><strong>函数功能：</strong></p>
+<pre><code>该函数用于配置内存映射设置寄存器
+</code></pre>
+<p><strong>函数参数：</strong></p>
+<pre><code>handle：QSPI句柄
+memConfig：内存映射配置
+</code></pre>
+<p><strong>函数返回值：</strong></p>
+<pre><code>函数执行成功返回值为0，函数执行失败返回值小于0，且返回值表征错误类型
+</code></pre>
+<h4 id="qspi-isframecompleted">QSPI_isFrameCompleted</h4>
+<p><strong>函数原型：</strong></p>
+<pre><code>bool QSPI_isFrameCompleted(QSPI_Handle handle)	
+</code></pre>
+<p><strong>函数功能：</strong></p>
+<pre><code>该函数轮询帧传输完成的状态
+</code></pre>
+<p><strong>函数参数：</strong></p>
+<pre><code>handle：QSPI句柄
+</code></pre>
+<p><strong>函数返回值：</strong></p>
+<pre><code>帧传输完成返回值为true，帧传输未完成返回false
+</code></pre>
+<h4 id="qspi-isbusy">QSPI_isBusy</h4>
+<p><strong>函数原型：</strong></p>
+<pre><code>bool QSPI_isBusy(QSPI_Handle handle)	
+</code></pre>
+<p><strong>函数功能：</strong></p>
+<pre><code>该函数轮询QSPI忙碌位的状态
+</code></pre>
+<p><strong>函数参数：</strong></p>
+<pre><code>handle：QSPI句柄
+</code></pre>
+<p><strong>函数返回值：</strong></p>
+<pre><code>QSPI处于忙碌状态返回值为true，QSPI处于空闲状态返回值为false
+</code></pre>
+<h3 id="qspiflash驱动">QSPIFlash驱动</h3>
+<h4 id="qspiflash-getdeviceid">QSPIFlash_getDeviceID</h4>
+<p><strong>函数原型：</strong></p>
+<pre><code>void QSPIFlash_getDeviceID(QSPIFlash_Handle QSPIFlashHandle,
+                            SPIFLASH_devID * devId 
+                            )	
+</code></pre>
+<p><strong>函数功能：</strong></p>
+<pre><code>该函数用于获取flash设备信息
+</code></pre>
+<p><strong>函数参数：</strong></p>
+<pre><code>QSPIFlashHandle：QSPI flash驱动的句柄
+devId：指向设备ID结构体的指针
+</code></pre>
+<p><strong>函数返回值：</strong></p>
+<pre><code>无
+</code></pre>
+<h4 id="qspiflash-writeenable">QSPIFlash_writeEnable</h4>
+<p><strong>函数原型：</strong></p>
+<pre><code>void QSPIFlash_writeEnable(QSPIFlash_Handle QSPIFlashHandle)	
+</code></pre>
+<p><strong>函数功能：</strong></p>
+<pre><code>该函数使能写入flash，需要在擦除和页编程操作之前需要操作它
+</code></pre>
+<p><strong>函数参数：</strong></p>
+<pre><code>QSPIFlashHandle：QSPI flash驱动的句柄
+</code></pre>
+<p><strong>函数返回值：</strong></p>
+<pre><code>无
+</code></pre>
+<h4 id="qspiflash-writedisable">QSPIFlash_writeDisable</h4>
+<p><strong>函数原型：</strong></p>
+<pre><code>void QSPIFlash_writeDisable(QSPIFlash_Handle QSPIFlashHandle)
+</code></pre>
+<p><strong>函数功能：</strong></p>
+<pre><code>该函数禁能写入flash
+</code></pre>
+<p><strong>函数参数：</strong></p>
+<pre><code>QSPIFlashHandle：QSPI flash驱动的句柄
+</code></pre>
+<p><strong>函数返回值：</strong></p>
+<pre><code>无
+</code></pre>
+<h4 id="qspiflash-progquadread">QSPIFlash_progQuadRead</h4>
+<p><strong>函数原型：</strong></p>
+<pre><code>void QSPIFlash_progQuadRead(QSPIFlash_Handle QSPIFlashHandle)
+</code></pre>
+<p><strong>函数功能：</strong></p>
+<pre><code>该函数为四路接口操作准备串行内存
+</code></pre>
+<p><strong>函数参数：</strong></p>
+<pre><code>QSPIFlashHandle：QSPI flash驱动的句柄
+</code></pre>
+<p><strong>函数返回值：</strong></p>
+<pre><code>无
+</code></pre>
+<h4 id="qspiflash-clearblockprotectbits">QSPIFlash_clearBlockProtectBits</h4>
+<p><strong>函数原型：</strong></p>
+<pre><code>void QSPIFlash_clearBlockProtectBits(QSPIFlash_Handle QSPIFlashHandle)
+</code></pre>
+<p><strong>函数功能：</strong></p>
+<pre><code>该函数用于清除块保护位
+</code></pre>
+<p><strong>函数参数：</strong></p>
+<pre><code>QSPIFlashHandle：QSPI flash驱动的句柄
+</code></pre>
+<p><strong>函数返回值：</strong></p>
+<pre><code>无
+</code></pre>
+<h4 id="qspiflash-singleread">QSPIFlash_singleRead</h4>
+<p><strong>函数原型：</strong></p>
+<pre><code>void QSPIFlash_singleRead(QSPIFlash_Handle QSPIFlashHandle,
+                          uint32_t memAddr,
+                          uint32_t dataLen,
+                          uint8_t * userDataBuf 
+                          )	
+</code></pre>
+<p><strong>函数功能：</strong></p>
+<pre><code>该函数在配置模式下进行单路读取
+</code></pre>
+<p><strong>函数参数：</strong></p>
+<pre><code>QSPIFlashHandle：QSPI flash驱动的句柄
+memAddr：flash地址
+dataLen：数据长度(按字节)
+userDataBuf：指向要写入数据的缓存区
+</code></pre>
+<p><strong>函数返回值：</strong></p>
+<pre><code>无
+</code></pre>
+<h4 id="qspiflash-dualread">QSPIFlash_dualRead</h4>
+<p><strong>函数原型：</strong></p>
+<pre><code>void QSPIFlash_dualRead(QSPIFlash_Handle QSPIFlashHandle,
+                          uint32_t memAddr,
+                          uint32_t dataLen,
+                          uint8_t * userDataBuf 
+                          )	
+</code></pre>
+<p><strong>函数功能：</strong></p>
+<pre><code>该函数在配置模式下进行双路读取
+</code></pre>
+<p><strong>函数参数：</strong></p>
+<pre><code>QSPIFlashHandle：QSPI flash驱动的句柄
+memAddr：flash地址
+dataLen：数据长度(按字节)
+userDataBuf：指向要写入数据的缓存区
+</code></pre>
+<p><strong>函数返回值：</strong></p>
+<pre><code>无
+</code></pre>
+<h4 id="qspiflash-quadread">QSPIFlash_quadRead</h4>
+<p><strong>函数原型：</strong></p>
+<pre><code>void QSPIFlash_quadRead(QSPIFlash_Handle QSPIFlashHandle,
+                          uint32_t memAddr,
+                          uint32_t dataLen,
+                          uint8_t * userDataBuf 
+                          )	
+</code></pre>
+<p><strong>函数功能：</strong></p>
+<pre><code>该函数在配置模式下进行四路读取
+</code></pre>
+<p><strong>函数参数：</strong></p>
+<pre><code>QSPIFlashHandle：QSPI flash驱动的句柄
+memAddr：flash地址
+dataLen：数据长度(按字节)
+userDataBuf：指向要写入数据的缓存区
+</code></pre>
+<p><strong>函数返回值：</strong></p>
+<pre><code>无
+</code></pre>
+<h4 id="qspiflash-mmapread">QSPIFlash_mmapRead</h4>
+<p><strong>函数原型：</strong></p>
+<pre><code>void QSPIFlash_mmapRead(QSPIFlash_Handle QSPIFlashHandle,
+                          uint32_t memAddr,
+                          uint32_t dataLen,
+                          uint8_t * userDataBuf 
+                          )	
+</code></pre>
+<p><strong>函数功能：</strong></p>
+<pre><code>该函数以内存映射的方式从QSPI flash中进行读取
+</code></pre>
+<p><strong>函数参数：</strong></p>
+<pre><code>QSPIFlashHandle：QSPI flash驱动的句柄
+memAddr：flash地址
+dataLen：数据长度(按字节)
+userDataBuf：指向要写入数据的缓存区
+</code></pre>
+<p><strong>函数返回值：</strong></p>
+<pre><code>当函数执行成功后，返回值为0，当读取失败是返回错误码
+</code></pre>
+<h4 id="qspiflash-singlewrite">QSPIFlash_singleWrite</h4>
+<p><strong>函数原型：</strong></p>
+<pre><code>void QSPIFlash_singleWrite(QSPIFlash_Handle QSPIFlashHandle,
+                            uint32_t memAddr,
+                            uint32_t dataLen,
+                            uint8_t * srcDataAddr 
+                            )	
+</code></pre>
+<p><strong>函数功能：</strong></p>
+<pre><code>在配置模式下该函数执行单通道写入
+</code></pre>
+<p><strong>函数参数：</strong></p>
+<pre><code>QSPIFlashHandle：QSPI flash驱动的句柄
+memAddr：flash地址
+dataLen：数据长度(按字节)
+srcDataAddr：指向要拷出数据的缓存区
+</code></pre>
+<p><strong>函数返回值：</strong></p>
+<pre><code>无
+</code></pre>
+<h4 id="qspiflash-mmapwrite">QSPIFlash_mmapWrite</h4>
+<p><strong>函数原型：</strong></p>
+<pre><code>int32_t QSPIFlash_mmapWrite(QSPIFlash_Handle QSPIFlashHandle,
+                            uint32_t memAddr,
+                            uint32_t dataLen,
+                            uint8_t * srcDataAddr 
+                            )	
+</code></pre>
+<p><strong>函数功能：</strong></p>
+<pre><code>该函数以内存映射方式写入到flash中
+</code></pre>
+<p><strong>函数参数：</strong></p>
+<pre><code>QSPIFlashHandle：QSPI flash驱动的句柄
+memAddr：flash地址
+dataLen：数据长度(按字节)
+srcDataAddr：指向要拷出数据的缓存区
+</code></pre>
+<p><strong>函数返回值：</strong></p>
+<pre><code>当函数执行成功返回值为0，当函数执行失败后返回值小于0
+</code></pre>
+<h4 id="qspiflash-configmmapread">QSPIFlash_configMmapRead</h4>
+<p><strong>函数原型：</strong></p>
+<pre><code>int32_t QSPIFlash_configMmapRead(QSPIFlash_Handle QSPIFlashHandle,
+                                FLASH_READ_MODE mode,
+                                int32_t * errCode 
+                                )	
+</code></pre>
+<p><strong>函数功能：</strong></p>
+<pre><code>该函数设置内存映射读的配置
+</code></pre>
+<p><strong>函数参数：</strong></p>
+<pre><code>QSPIFlashHandle：QSPI flash驱动的句柄
+mode：内存映射读的模式
+errCode：该API产生的错误码
+</code></pre>
+<p><strong>函数返回值：</strong></p>
+<pre><code>函数执行成功返回值为0，执行失败返回值小于0
+</code></pre>
+<h4 id="qspiflash-configmmapwrite">QSPIFlash_configMmapWrite</h4>
+<p><strong>函数原型：</strong></p>
+<pre><code>void QSPIFlash_configMmapWrite(QSPIFlash_Handle QSPIFlashHandle	)	
+</code></pre>
+<p><strong>函数功能：</strong></p>
+<pre><code>该函数为内存映射写设置配置
+</code></pre>
+<p><strong>函数参数：</strong></p>
+<pre><code>QSPIFlashHandle：QSPI flash驱动的句柄
+</code></pre>
+<p><strong>函数返回值：</strong></p>
+<pre><code>无
+</code></pre>
+<h4 id="qspiflash-sectorerase">QSPIFlash_sectorErase</h4>
+<p><strong>函数原型：</strong></p>
+<pre><code>int32_t QSPIFlash_sectorErase(QSPIFlash_Handle QSPIFlashHandle,
+                              uint32_t addr 
+                              )		
+</code></pre>
+<p><strong>函数功能：</strong></p>
+<p>该函数擦除一个flash扇区</p>
+<p><strong>函数参数：</strong></p>
+<pre><code>QSPIFlashHandle：QSPI flash驱动的句柄
+addr：内存映射读的模式
+</code></pre>
+<p><strong>函数返回值：</strong></p>
+<pre><code>函数执行成功返回值为0，当扇区擦除失败时返回值小于0
+</code></pre>
+<h4 id="qspiflash-blockerase">QSPIFlash_blockErase</h4>
+<p><strong>函数原型：</strong></p>
+<pre><code>int32_t QSPIFlash_blockErase(QSPIFlash_Handle QSPIFlashHandle,
+                              uint32_t addr 
+                              )		
+</code></pre>
+<p><strong>函数功能：</strong></p>
+<pre><code>该函数擦除一个64KB flash扇区
+</code></pre>
+<p><strong>函数参数：</strong></p>
+<pre><code>QSPIFlashHandle：QSPI flash驱动的句柄
+addr：内存映射读的模式
+</code></pre>
+<p><strong>函数返回值：</strong></p>
+<pre><code>函数执行成功返回值为0，当扇区擦除失败时返回值小于0
+</code></pre>
+<h4 id="qspiflash-chiperase">QSPIFlash_chipErase</h4>
+<p><strong>函数原型：</strong></p>
+<pre><code>int32_t QSPIFlash_chipErase(QSPIFlash_Handle QSPIFlashHandle)		
+</code></pre>
+<p><strong>函数功能：</strong></p>
+<pre><code>该函数擦除整个flash
+</code></pre>
+<p><strong>函数参数：</strong></p>
+<pre><code>QSPIFlashHandle：QSPI flash驱动的句柄
+</code></pre>
+<p><strong>函数返回值：</strong></p>
+<pre><code>函数执行成功返回值为0，当扇区擦除失败时返回值小于0
+</code></pre>
+<h4 id="qspiflash-init">QSPIFlash_init</h4>
+<p><strong>函数原型：</strong></p>
+<pre><code>void QSPIFlash_init(void)	
+</code></pre>
+<p><strong>函数功能：</strong></p>
+<pre><code>该函数初始化QSPI flash驱动
+</code></pre>
+<p><strong>函数参数：</strong></p>
+<pre><code>无
+</code></pre>
+<p><strong>函数返回值：</strong></p>
+<pre><code>无
+</code></pre>
+<h4 id="qspiflash-open">QSPIFlash_open</h4>
+<p><strong>函数原型：</strong></p>
+<pre><code>QSPIFlash_Handle QSPIFlash_open(QSPI_Handle QSPIHandle,
+                                int32_t * errCode 
+                                )	
+</code></pre>
+<p><strong>函数功能：</strong></p>
+<pre><code>该函数打开QSPI Flash驱动，能获取flash设备的信息
+</code></pre>
+<p><strong>函数参数：</strong></p>
+<pre><code>QSPIHandle：qspi的句柄
+errCode：执行该函数产生的错误码
+</code></pre>
+<p><strong>函数返回值：</strong></p>
+<pre><code>当函数执行成功后，返回值为QSPIFlash_Handle的句柄，当函数执行错误后，返回值为空指针
+</code></pre>
+<h4 id="qspiflash-close">QSPIFlash_close</h4>
+<p><strong>函数原型：</strong></p>
+<pre><code>int32_t QSPIFlash_close(QSPIFlash_Handle QSPIFlashHandle)	
+</code></pre>
+<p><strong>函数功能：</strong></p>
+<pre><code>该函数用于关闭QSPI Flash驱动程序和驱动程序所使用的资源
+</code></pre>
+<p><strong>函数参数：</strong></p>
+<pre><code>QSPIFlashHandle：QSPI flash驱动的句柄
+</code></pre>
+<p><strong>函数返回值：</strong></p>
+<pre><code>当函数执行成功后返回值为0，当函数执行失败时返回值小于0
+</code></pre>
+<h4 id="qspiflash-getextflashaddr">QSPIFlash_getExtFlashAddr</h4>
+<p><strong>函数原型：</strong></p>
+<pre><code>int32_t QSPIFlash_getExtFlashAddr(QSPIFlash_Handle QSPIFlashHandle)
+</code></pre>
+<p><strong>函数功能：</strong></p>
+<pre><code>该函数获取外部flash的基地址
+</code></pre>
+<p><strong>函数参数：</strong></p>
+<pre><code>QSPIFlashHandle：QSPI flash驱动的句柄
+</code></pre>
+<p><strong>函数返回值：</strong></p>
+<pre><code>返回值为外部flash的地址
+</code></pre>
+<h4 id="qspiflash-sysdmawrite">QSPIFlash_sysDmaWrite</h4>
+<p><strong>函数原型：</strong></p>
+<pre><code>int32_t QSPIFlash_sysDmaWrite(QSPIFlash_Handle QSPIFlashHandle,
+                                DMA_Handle dmaHandle,
+                                uint32_t dmaChan,
+                                uint32_t srcAddr,
+                                uint32_t dstAddr,
+                                uint32_t dataLen 
+                                )	
+</code></pre>
+<p><strong>函数功能：</strong></p>
+<pre><code>该函数设置DMA写，并且传输用户缓存数据到flash
+</code></pre>
+<p><strong>函数参数：</strong></p>
+<pre><code>QSPIFlashHandle：QSPI flash驱动的句柄
+dmaHandle：dma驱动的句柄
+dmaChan：DMA通道
+srcAddr：用于写入操作的缓冲区地址，地址应双字节对齐
+dstAddr：写入操作的flash地址，地址应双字节对齐
+dataLen：DMA读的数据长度，以双字节为单位
+</code></pre>
+<p><strong>函数返回值：</strong></p>
+<pre><code>当函数执行成功后返回值为0，当函数执行失败后返回值小于0
+</code></pre>
+<h4 id="qspiflash-sysdmaread">QSPIFlash_sysDmaRead</h4>
+<p><strong>函数原型：</strong></p>
+<pre><code>int32_t QSPIFlash_sysDmaRead(QSPIFlash_Handle QSPIFlashHandle,
+                                DMA_Handle dmaHandle,
+                                uint32_t dmaChan,
+                                uint32_t srcAddr,
+                                uint32_t dstAddr,
+                                uint32_t dataLen 
+                                )	
+</code></pre>
+<p><strong>函数功能：</strong></p>
+<p>该函数设置DMA读</p>
+<p><strong>函数参数：</strong></p>
+<pre><code>QSPIFlashHandle：QSPI flash驱动的句柄
+dmaHandle：dma驱动的句柄
+dmaChan：DMA通道
+srcAddr：用于写入操作的缓冲区地址，地址应双字节对齐
+dstAddr：写入操作的flash地址，地址应双字节对齐
+dataLen：DMA读的数据长度，以双字节为单位
+</code></pre>
+<p><strong>函数返回值：</strong></p>
+<pre><code>当函数执行成功后返回值为0，当函数执行失败后返回值小于0
+</code></pre>
+<h1>代码案例</h1>
+<h2 id="gpio复用">GPIO复用</h2>
+<p>硬件电路原理图如下图所示，在硬件上关于flash GPIO的PIN脚共有6个，R12复用为QSPI的时钟线，P11复用为QSPI的时钟线，R13复用QSPI_D0的数据线，N12复用为QSPI_D1的数据线，R14复用为QSPI_D2的数据线，P12复用为QSPI_D3的数据线</p>
+<img src="/2025/04/25/radar/TI/flash/qspi%20flash/2.png" class="" title="放置图片">
+<img src="/2025/04/25/radar/TI/flash/qspi%20flash/3.png" class="" title="放置图片">
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">Pinmux_Set_OverrideCtrl(SOC_XWR68XX_PINR12_PADAP, PINMUX_OUTEN_RETAIN_HW_CTRL, PINMUX_INPEN_RETAIN_HW_CTRL);</span><br><span class="line">Pinmux_Set_FuncSel(SOC_XWR68XX_PINR12_PADAP, SOC_XWR68XX_PINR12_PADAP_QSPI_CLK);</span><br><span class="line"></span><br><span class="line">Pinmux_Set_OverrideCtrl(SOC_XWR68XX_PINP11_PADAQ, PINMUX_OUTEN_RETAIN_HW_CTRL, PINMUX_INPEN_RETAIN_HW_CTRL);</span><br><span class="line">Pinmux_Set_FuncSel(SOC_XWR68XX_PINP11_PADAQ, SOC_XWR68XX_PINP11_PADAQ_QSPI_CSN);</span><br><span class="line"></span><br><span class="line">Pinmux_Set_OverrideCtrl(SOC_XWR68XX_PINR13_PADAL, PINMUX_OUTEN_RETAIN_HW_CTRL, PINMUX_INPEN_RETAIN_HW_CTRL);</span><br><span class="line">Pinmux_Set_FuncSel(SOC_XWR68XX_PINR13_PADAL, SOC_XWR68XX_PINR13_PADAL_QSPI_D0);</span><br><span class="line"></span><br><span class="line">Pinmux_Set_OverrideCtrl(SOC_XWR68XX_PINN12_PADAM, PINMUX_OUTEN_RETAIN_HW_CTRL, PINMUX_INPEN_RETAIN_HW_CTRL);</span><br><span class="line">Pinmux_Set_FuncSel(SOC_XWR68XX_PINN12_PADAM, SOC_XWR68XX_PINN12_PADAM_QSPI_D1);</span><br><span class="line"></span><br><span class="line">Pinmux_Set_OverrideCtrl(SOC_XWR68XX_PINR14_PADAN, PINMUX_OUTEN_RETAIN_HW_CTRL, PINMUX_INPEN_RETAIN_HW_CTRL);</span><br><span class="line">Pinmux_Set_FuncSel(SOC_XWR68XX_PINR14_PADAN, SOC_XWR68XX_PINR14_PADAN_QSPI_D2);</span><br><span class="line"></span><br><span class="line">Pinmux_Set_OverrideCtrl(SOC_XWR68XX_PINP12_PADAO, PINMUX_OUTEN_RETAIN_HW_CTRL, PINMUX_INPEN_RETAIN_HW_CTRL);</span><br><span class="line">Pinmux_Set_FuncSel(SOC_XWR68XX_PINP12_PADAO, SOC_XWR68XX_PINP12_PADAO_QSPI_D3);</span><br></pre></td></tr></table></figure>
+<h2 id="qspi和qspi-flash初始化">qspi和qspi flash初始化</h2>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">QSPI_init();</span><br><span class="line">QSPIFlash_init();</span><br></pre></td></tr></table></figure>
+<h2 id="qspi和qspi-flash打开">qspi和qspi flash打开</h2>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">int32_t errCode;</span><br><span class="line">QSPI_Params QSPIParams;</span><br><span class="line">/* Open QSPI driver */</span><br><span class="line">QSPI_Params_init(&amp;QSPIParams);</span><br><span class="line"></span><br><span class="line">/* Set the QSPI peripheral clock to 200MHz */</span><br><span class="line">QSPIParams.qspiClk = 200 * 1000000U;</span><br><span class="line">QSPIParams.clkMode = QSPI_CLOCK_MODE_0;</span><br><span class="line">/* Running at 40MHz QSPI bit rate</span><br><span class="line">* QSPI bit clock rate derives from QSPI peripheral clock(qspiClk)</span><br><span class="line">    and divide clock internally down to bit clock rate</span><br><span class="line">    BitClockRate = qspiClk/divisor(=5, setup by QSPI driver internally)</span><br><span class="line">*/</span><br><span class="line">QSPIParams.bitRate = 40 * 1000000U;</span><br><span class="line">qspiHandle = QSPI_open(&amp;QSPIParams, &amp;errCode);</span><br><span class="line">if (qspiHandle == NULL)</span><br><span class="line">&#123;</span><br><span class="line">    return 0;</span><br><span class="line">&#125;</span><br><span class="line">qspiFlashHandle = QSPIFlash_open(qspiHandle, &amp;errCode);</span><br><span class="line">if (qspiFlashHandle == NULL )</span><br><span class="line">&#123;</span><br><span class="line">    return 0;</span><br><span class="line">&#125;</span><br><span class="line">return 1;</span><br></pre></td></tr></table></figure>
+<h2 id="flash写入数据">flash写入数据</h2>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">int32_t retVal;</span><br><span class="line">//erase</span><br><span class="line">retVal = QSPIFlash_sectorErase(qspiFlashHandle, flashOffset);</span><br><span class="line"></span><br><span class="line"> /* Configure in write read mode */</span><br><span class="line"> QSPIFlash_configMmapWrite(qspiFlashHandle);</span><br><span class="line"></span><br><span class="line"> //write</span><br><span class="line"> retVal = QSPIFlash_mmapWrite(qspiFlashHandle,</span><br><span class="line">                              (const uint32_t *)(flashOffset + QSPIFlash_getExtFlashAddr(qspiFlashHandle)),</span><br><span class="line">                              (size +7U)/8U,</span><br><span class="line">                              writeBuf);</span><br><span class="line"> return retVal;</span><br></pre></td></tr></table></figure>
+<h2 id="flash读取数据">flash读取数据</h2>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">uint32_t retVal = 0;</span><br><span class="line">//config qspiFlash read mode</span><br><span class="line">if(QSPIFlash_configMmapRead(qspiFlashHandle, FLASH_AUTO_MODE, &amp;retVal) &lt; 0)</span><br><span class="line">&#123;</span><br><span class="line">    retVal = -1;</span><br><span class="line">&#125;</span><br><span class="line">//read from QSPI flash in memory mapped mode</span><br><span class="line">retVal = QSPIFlash_mmapRead(qspiFlashHandle,</span><br><span class="line">                           (const uint32_t *)(flashOffset + QSPIFlash_getExtFlashAddr(qspiFlashHandle)),</span><br><span class="line">                           (size +7U)/8U,</span><br><span class="line">                           readBuf);</span><br><span class="line">return retVal;</span><br></pre></td></tr></table></figure>
+<h1>参考文献</h1>
+<ol>
+<li>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/wangguchao/article/details/105593303">基础——SPI与QSPI的异同，QSPI的具体协议是什么，QSPI有什么用</a></p>
+</li>
+<li>
+<p>TI SDK驱动库(mmwave_sdk_03_05_00_04\packages\ti\drivers\qspi)</p>
+</li>
+<li>
+<p>TI SDK驱动库(mmwave_sdk_03_05_00_04\packages\ti\drivers\qspiflash)</p>
+</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          
+
+<div class="post-copyright">
+<ul>
+  <li class="post-copyright-author">
+      <strong>本文作者： </strong>xiaojie
+  </li>
+  <li class="post-copyright-link">
+      <strong>本文链接：</strong>
+      <a href="https://xxiaojie.github.io/2025/04/25/radar/TI/flash/qspi%20flash/" title="QSPI flash driver">https://xxiaojie.github.io/2025/04/25/radar/TI/flash/qspi flash/</a>
+  </li>
+  <li class="post-copyright-license">
+      <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2025/04/25/radar/TI/IIC/IIC%20driver/" rel="prev" title="IIC driver">
+                  <i class="fa fa-angle-left"></i> IIC driver
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2025</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">xiaojie</span>
+  </div>
+<div class="wordcount">
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-line"></i>
+    </span>
+      <span>站点总字数：</span>
+    <span title="站点总字数">55k</span>
+  </span>
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span>站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">50 分钟</span>
+  </span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

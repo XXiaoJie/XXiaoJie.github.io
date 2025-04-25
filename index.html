@@ -146,13 +146,13 @@
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
         <a href="/archives/">
-          <span class="site-state-item-count">8</span>
+          <span class="site-state-item-count">10</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
           <a href="/categories/">
-        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-count">3</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
   </nav>
@@ -172,6 +172,1015 @@
     </div>
 
     <div class="main-inner index posts-expand">
+
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
+    <link itemprop="mainEntityOfPage" href="https://xxiaojie.github.io/2025/04/25/radar/TI/flash/qspi%20flash/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/xiaojie.png">
+      <meta itemprop="name" content="xiaojie">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="xiaojie雷达说">
+      <meta itemprop="description" content="分享雷达知识">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content=" | xiaojie雷达说">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          <a href="/2025/04/25/radar/TI/flash/qspi%20flash/" class="post-title-link" itemprop="url">QSPI flash driver</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+      
+
+      <time title="创建时间：2025-04-25 23:29:14 / 修改时间：21:11:01" itemprop="dateCreated datePublished" datetime="2025-04-25T23:29:14+08:00">2025-04-25</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/radar/" itemprop="url" rel="index"><span itemprop="name">radar</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/radar/TI/" itemprop="url" rel="index"><span itemprop="name">TI</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-break"></span>
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>10k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>9 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <p>Hello，大家好，我是Xiaojie，好久不见，欢迎大家能够和Xiaojie一起学习毫米波雷达知识，这篇文章主要是介绍flash的基本知识以及TI SDK中的qspi驱动。</p>
+<h1>基础知识</h1>
+<h2 id="qspi协议简介">QSPI协议简介</h2>
+<p>QSPI是Queued SPI的简写，是Motorola公司推出的SPI接口的扩展，比SPI应用更加广泛。在SPI协议的基础上，Motorola公司对其功能进行了增强，增加了队列传输机制，推出了队列串行外围接口协议(即QSPI协议)。QSPI是一种专用的通信接口，连接单、双或四条数据线SPI Flash存储介质。</p>
+<p>该接口可以在一下三种模式下工作：</p>
+<ol>
+<li>
+<p>间接模式：使用QSPI寄存器执行全部操作</p>
+</li>
+<li>
+<p>状态轮询模式：周期性读取外部Flash状态寄存器，而且标志位置1时会产生中断(如擦写或烧写完成，会产生中断)</p>
+</li>
+<li>
+<p>内存映射模式：外部Flash映射到微控制器地址空间，从而系统将其视作内部存储器</p>
+</li>
+</ol>
+<p>QSPI使用6个信号线连接FLash，分别是4根数据线IO0、IO1、IO2、IO3，一根时钟线CLK，一个片选线CS</p>
+<ol>
+<li>
+<p>CS：片选输出(低电平有效)</p>
+</li>
+<li>
+<p>CLK：时钟输出，用于通讯数据同步。由通讯主机产生，决定了通讯的速率，不同的设备支持的最高时钟频率不一样，两个设备之间通讯时，通讯速率受限于低速设备</p>
+</li>
+<li>
+<p>IO0：在双线/四线模式中位双向IO，单线模式中位串行输出</p>
+</li>
+<li>
+<p>IO1：在双线/四线模式中位双向IO，单线模式中为串行输入</p>
+</li>
+<li>
+<p>IO2：在四线模式中为双向IO</p>
+</li>
+<li>
+<p>IO3：在四线模式中为双向IO</p>
+</li>
+</ol>
+<h2 id="qspi命令序列">QSPI命令序列</h2>
+<p>QSPI通过命令与Flash通信，每条命令包括指令、地址、交替字节、空指令和数据这五个阶段，任一阶段均可跳过，但至少要包含指令、地址、交替字节或数据阶段之一。CS在每条指令开始前下降，在每条指令完成后再次上升。下图为QSPI四线模式下的读命令时许。</p>
+<img src="/2025/04/25/radar/TI/flash/qspi%20flash/1.png" class="" title="放置图片">
+<ol>
+<li>指令阶段</li>
+</ol>
+<p>在指令阶段，将配置的一条8位指令发送到Flash，指定待执行的操作。</p>
+<ol start="2">
+<li>地址阶段</li>
+</ol>
+<p>在地址阶段，将1-4字节发送到Flash，指示操作地址。</p>
+<ol start="3">
+<li>交替字节阶段</li>
+</ol>
+<p>在交替字节阶段，将1-4字节发送到Flash，一般用于控制操作模式</p>
+<ol start="4">
+<li>空指令周期阶段</li>
+</ol>
+<p>在空指令周期阶段，给定的1-31个周期内不发送或接收任何数据，目的时当采用更高的时钟频率时，给Flash留出准备数据阶段的时间。</p>
+<ol start="5">
+<li>数据阶段</li>
+</ol>
+<p>在数据阶段，可以从Flash接收或向其发送任意数量的字节</p>
+<h1>TI驱动以及函数代码实现</h1>
+<h2 id="ti驱动代码">TI驱动代码</h2>
+<h3 id="qspi驱动">QSPI驱动</h3>
+<h4 id="qspi-init">QSPI_init</h4>
+<p><strong>函数原型：</strong></p>
+<pre><code>void QSPI_init	(void)	
+</code></pre>
+<p><strong>函数功能：</strong></p>
+<pre><code>QSPI初始化，该函数每个系统只能调用一次且其他QSPI API必须在其之后调用
+</code></pre>
+<p><strong>函数参数：</strong></p>
+<pre><code>无
+</code></pre>
+<p><strong>函数返回值：</strong></p>
+<pre><code>无
+</code></pre>
+<h4 id="qspi-params-init">QSPI_Params_init</h4>
+<p><strong>函数原型：</strong></p>
+<pre><code>void 	QSPI_Params_init (QSPI_Params *params)
+</code></pre>
+<p><strong>函数功能：</strong></p>
+<pre><code>QSPI参数初始化，该函数每个系统只能调用一次且其他QSPI API必须在其之后调用
+</code></pre>
+<p><strong>函数参数：</strong></p>
+<pre><code>params：指向QSPI_Param指针，用于初始化
+</code></pre>
+<p><strong>函数返回值：</strong></p>
+<pre><code>无
+</code></pre>
+<h4 id="qspi-open">QSPI_open</h4>
+<p><strong>函数原型：</strong></p>
+<pre><code>QSPI_Handle QSPI_open(QSPI_Params* params, int32_t* errCode)
+</code></pre>
+<p><strong>函数功能：</strong></p>
+<pre><code>初始化一个给定的QSPI外围设备
+</code></pre>
+<p><strong>函数参数：</strong></p>
+<pre><code>params：用于创建QSPI驱动程序实例的QSPI参数
+errCode：QSPI驱动程序发生错误时的错误码
+</code></pre>
+<p><strong>函数返回值：</strong></p>
+<pre><code>函数执行成功后，返回值为QSPI_Handle；函数发生错误，则返回NULL
+</code></pre>
+<h4 id="qspi-cfgread">QSPI_cfgRead</h4>
+<p><strong>函数原型：</strong></p>
+<pre><code>int32_t QSPI_cfgRead(QSPI_Handle handle,
+                      QSPI_CMD cmd,
+                      QSPI_WORDLEN wordLen,
+                      uint32_t * data,
+                      uint32_t numWords 
+                      )	
+</code></pre>
+<p><strong>函数功能：</strong></p>
+<pre><code>通过配置端口执行QSPI读取
+</code></pre>
+<p><strong>函数参数：</strong></p>
+<pre><code>handle：QSPI句柄
+cmd：QSPI读取命令
+wordLen：QSPI数据字长(bit为单位)
+data：指向data缓冲区，用于保存读取到的数据
+numWords：一帧中要读取的字长数
+</code></pre>
+<p><strong>函数返回值：</strong></p>
+<pre><code>函数执行成功返回值为0，函数执行失败返回值小于0，且返回值表征错误类型
+</code></pre>
+<h4 id="qspi-cfgwrite">QSPI_cfgWrite</h4>
+<p><strong>函数原型：</strong></p>
+<pre><code>int32_t QSPI_cfgWrite(QSPI_Handle handle,
+                  QSPI_CMD cmd,
+                  QSPI_WORDLEN wordLen,
+                  uint32_t * data,
+                  uint32_t numWords 
+                  )	
+</code></pre>
+<p><strong>函数功能：</strong></p>
+<pre><code>通过配置端口执行QSPI写入
+</code></pre>
+<p><strong>函数参数：</strong></p>
+<pre><code>handle：QSPI句柄
+cmd：QSPI写入命令
+wordLen：QSPI数据字长(bit为单位)
+data：要写入的数据
+numWords：一帧中要写入的字长数
+</code></pre>
+<p><strong>函数返回值：</strong></p>
+<pre><code>函数执行成功返回值为0，函数执行失败返回值小于0，且返回值表征错误类型
+</code></pre>
+<h4 id="qspi-memaccesscfg">QSPI_memAccessCfg</h4>
+<p><strong>函数原型：</strong></p>
+<pre><code>void QSPI_memAccessCfg	(QSPI_Handle handle,
+                          QSPI_memConfig * memConfig 
+                          )	
+</code></pre>
+<p><strong>函数功能：</strong></p>
+<pre><code>该函数用于配置内存映射设置寄存器
+</code></pre>
+<p><strong>函数参数：</strong></p>
+<pre><code>handle：QSPI句柄
+memConfig：内存映射配置
+</code></pre>
+<p><strong>函数返回值：</strong></p>
+<pre><code>函数执行成功返回值为0，函数执行失败返回值小于0，且返回值表征错误类型
+</code></pre>
+<h4 id="qspi-isframecompleted">QSPI_isFrameCompleted</h4>
+<p><strong>函数原型：</strong></p>
+<pre><code>bool QSPI_isFrameCompleted(QSPI_Handle handle)	
+</code></pre>
+<p><strong>函数功能：</strong></p>
+<pre><code>该函数轮询帧传输完成的状态
+</code></pre>
+<p><strong>函数参数：</strong></p>
+<pre><code>handle：QSPI句柄
+</code></pre>
+<p><strong>函数返回值：</strong></p>
+<pre><code>帧传输完成返回值为true，帧传输未完成返回false
+</code></pre>
+<h4 id="qspi-isbusy">QSPI_isBusy</h4>
+<p><strong>函数原型：</strong></p>
+<pre><code>bool QSPI_isBusy(QSPI_Handle handle)	
+</code></pre>
+<p><strong>函数功能：</strong></p>
+<pre><code>该函数轮询QSPI忙碌位的状态
+</code></pre>
+<p><strong>函数参数：</strong></p>
+<pre><code>handle：QSPI句柄
+</code></pre>
+<p><strong>函数返回值：</strong></p>
+<pre><code>QSPI处于忙碌状态返回值为true，QSPI处于空闲状态返回值为false
+</code></pre>
+<h3 id="qspiflash驱动">QSPIFlash驱动</h3>
+<h4 id="qspiflash-getdeviceid">QSPIFlash_getDeviceID</h4>
+<p><strong>函数原型：</strong></p>
+<pre><code>void QSPIFlash_getDeviceID(QSPIFlash_Handle QSPIFlashHandle,
+                            SPIFLASH_devID * devId 
+                            )	
+</code></pre>
+<p><strong>函数功能：</strong></p>
+<pre><code>该函数用于获取flash设备信息
+</code></pre>
+<p><strong>函数参数：</strong></p>
+<pre><code>QSPIFlashHandle：QSPI flash驱动的句柄
+devId：指向设备ID结构体的指针
+</code></pre>
+<p><strong>函数返回值：</strong></p>
+<pre><code>无
+</code></pre>
+<h4 id="qspiflash-writeenable">QSPIFlash_writeEnable</h4>
+<p><strong>函数原型：</strong></p>
+<pre><code>void QSPIFlash_writeEnable(QSPIFlash_Handle QSPIFlashHandle)	
+</code></pre>
+<p><strong>函数功能：</strong></p>
+<pre><code>该函数使能写入flash，需要在擦除和页编程操作之前需要操作它
+</code></pre>
+<p><strong>函数参数：</strong></p>
+<pre><code>QSPIFlashHandle：QSPI flash驱动的句柄
+</code></pre>
+<p><strong>函数返回值：</strong></p>
+<pre><code>无
+</code></pre>
+<h4 id="qspiflash-writedisable">QSPIFlash_writeDisable</h4>
+<p><strong>函数原型：</strong></p>
+<pre><code>void QSPIFlash_writeDisable(QSPIFlash_Handle QSPIFlashHandle)
+</code></pre>
+<p><strong>函数功能：</strong></p>
+<pre><code>该函数禁能写入flash
+</code></pre>
+<p><strong>函数参数：</strong></p>
+<pre><code>QSPIFlashHandle：QSPI flash驱动的句柄
+</code></pre>
+<p><strong>函数返回值：</strong></p>
+<pre><code>无
+</code></pre>
+<h4 id="qspiflash-progquadread">QSPIFlash_progQuadRead</h4>
+<p><strong>函数原型：</strong></p>
+<pre><code>void QSPIFlash_progQuadRead(QSPIFlash_Handle QSPIFlashHandle)
+</code></pre>
+<p><strong>函数功能：</strong></p>
+<pre><code>该函数为四路接口操作准备串行内存
+</code></pre>
+<p><strong>函数参数：</strong></p>
+<pre><code>QSPIFlashHandle：QSPI flash驱动的句柄
+</code></pre>
+<p><strong>函数返回值：</strong></p>
+<pre><code>无
+</code></pre>
+<h4 id="qspiflash-clearblockprotectbits">QSPIFlash_clearBlockProtectBits</h4>
+<p><strong>函数原型：</strong></p>
+<pre><code>void QSPIFlash_clearBlockProtectBits(QSPIFlash_Handle QSPIFlashHandle)
+</code></pre>
+<p><strong>函数功能：</strong></p>
+<pre><code>该函数用于清除块保护位
+</code></pre>
+<p><strong>函数参数：</strong></p>
+<pre><code>QSPIFlashHandle：QSPI flash驱动的句柄
+</code></pre>
+<p><strong>函数返回值：</strong></p>
+<pre><code>无
+</code></pre>
+<h4 id="qspiflash-singleread">QSPIFlash_singleRead</h4>
+<p><strong>函数原型：</strong></p>
+<pre><code>void QSPIFlash_singleRead(QSPIFlash_Handle QSPIFlashHandle,
+                          uint32_t memAddr,
+                          uint32_t dataLen,
+                          uint8_t * userDataBuf 
+                          )	
+</code></pre>
+<p><strong>函数功能：</strong></p>
+<pre><code>该函数在配置模式下进行单路读取
+</code></pre>
+<p><strong>函数参数：</strong></p>
+<pre><code>QSPIFlashHandle：QSPI flash驱动的句柄
+memAddr：flash地址
+dataLen：数据长度(按字节)
+userDataBuf：指向要写入数据的缓存区
+</code></pre>
+<p><strong>函数返回值：</strong></p>
+<pre><code>无
+</code></pre>
+<h4 id="qspiflash-dualread">QSPIFlash_dualRead</h4>
+<p><strong>函数原型：</strong></p>
+<pre><code>void QSPIFlash_dualRead(QSPIFlash_Handle QSPIFlashHandle,
+                          uint32_t memAddr,
+                          uint32_t dataLen,
+                          uint8_t * userDataBuf 
+                          )	
+</code></pre>
+<p><strong>函数功能：</strong></p>
+<pre><code>该函数在配置模式下进行双路读取
+</code></pre>
+<p><strong>函数参数：</strong></p>
+<pre><code>QSPIFlashHandle：QSPI flash驱动的句柄
+memAddr：flash地址
+dataLen：数据长度(按字节)
+userDataBuf：指向要写入数据的缓存区
+</code></pre>
+<p><strong>函数返回值：</strong></p>
+<pre><code>无
+</code></pre>
+<h4 id="qspiflash-quadread">QSPIFlash_quadRead</h4>
+<p><strong>函数原型：</strong></p>
+<pre><code>void QSPIFlash_quadRead(QSPIFlash_Handle QSPIFlashHandle,
+                          uint32_t memAddr,
+                          uint32_t dataLen,
+                          uint8_t * userDataBuf 
+                          )	
+</code></pre>
+<p><strong>函数功能：</strong></p>
+<pre><code>该函数在配置模式下进行四路读取
+</code></pre>
+<p><strong>函数参数：</strong></p>
+<pre><code>QSPIFlashHandle：QSPI flash驱动的句柄
+memAddr：flash地址
+dataLen：数据长度(按字节)
+userDataBuf：指向要写入数据的缓存区
+</code></pre>
+<p><strong>函数返回值：</strong></p>
+<pre><code>无
+</code></pre>
+<h4 id="qspiflash-mmapread">QSPIFlash_mmapRead</h4>
+<p><strong>函数原型：</strong></p>
+<pre><code>void QSPIFlash_mmapRead(QSPIFlash_Handle QSPIFlashHandle,
+                          uint32_t memAddr,
+                          uint32_t dataLen,
+                          uint8_t * userDataBuf 
+                          )	
+</code></pre>
+<p><strong>函数功能：</strong></p>
+<pre><code>该函数以内存映射的方式从QSPI flash中进行读取
+</code></pre>
+<p><strong>函数参数：</strong></p>
+<pre><code>QSPIFlashHandle：QSPI flash驱动的句柄
+memAddr：flash地址
+dataLen：数据长度(按字节)
+userDataBuf：指向要写入数据的缓存区
+</code></pre>
+<p><strong>函数返回值：</strong></p>
+<pre><code>当函数执行成功后，返回值为0，当读取失败是返回错误码
+</code></pre>
+<h4 id="qspiflash-singlewrite">QSPIFlash_singleWrite</h4>
+<p><strong>函数原型：</strong></p>
+<pre><code>void QSPIFlash_singleWrite(QSPIFlash_Handle QSPIFlashHandle,
+                            uint32_t memAddr,
+                            uint32_t dataLen,
+                            uint8_t * srcDataAddr 
+                            )	
+</code></pre>
+<p><strong>函数功能：</strong></p>
+<pre><code>在配置模式下该函数执行单通道写入
+</code></pre>
+<p><strong>函数参数：</strong></p>
+<pre><code>QSPIFlashHandle：QSPI flash驱动的句柄
+memAddr：flash地址
+dataLen：数据长度(按字节)
+srcDataAddr：指向要拷出数据的缓存区
+</code></pre>
+<p><strong>函数返回值：</strong></p>
+<pre><code>无
+</code></pre>
+<h4 id="qspiflash-mmapwrite">QSPIFlash_mmapWrite</h4>
+<p><strong>函数原型：</strong></p>
+<pre><code>int32_t QSPIFlash_mmapWrite(QSPIFlash_Handle QSPIFlashHandle,
+                            uint32_t memAddr,
+                            uint32_t dataLen,
+                            uint8_t * srcDataAddr 
+                            )	
+</code></pre>
+<p><strong>函数功能：</strong></p>
+<pre><code>该函数以内存映射方式写入到flash中
+</code></pre>
+<p><strong>函数参数：</strong></p>
+<pre><code>QSPIFlashHandle：QSPI flash驱动的句柄
+memAddr：flash地址
+dataLen：数据长度(按字节)
+srcDataAddr：指向要拷出数据的缓存区
+</code></pre>
+<p><strong>函数返回值：</strong></p>
+<pre><code>当函数执行成功返回值为0，当函数执行失败后返回值小于0
+</code></pre>
+<h4 id="qspiflash-configmmapread">QSPIFlash_configMmapRead</h4>
+<p><strong>函数原型：</strong></p>
+<pre><code>int32_t QSPIFlash_configMmapRead(QSPIFlash_Handle QSPIFlashHandle,
+                                FLASH_READ_MODE mode,
+                                int32_t * errCode 
+                                )	
+</code></pre>
+<p><strong>函数功能：</strong></p>
+<pre><code>该函数设置内存映射读的配置
+</code></pre>
+<p><strong>函数参数：</strong></p>
+<pre><code>QSPIFlashHandle：QSPI flash驱动的句柄
+mode：内存映射读的模式
+errCode：该API产生的错误码
+</code></pre>
+<p><strong>函数返回值：</strong></p>
+<pre><code>函数执行成功返回值为0，执行失败返回值小于0
+</code></pre>
+<h4 id="qspiflash-configmmapwrite">QSPIFlash_configMmapWrite</h4>
+<p><strong>函数原型：</strong></p>
+<pre><code>void QSPIFlash_configMmapWrite(QSPIFlash_Handle QSPIFlashHandle	)	
+</code></pre>
+<p><strong>函数功能：</strong></p>
+<pre><code>该函数为内存映射写设置配置
+</code></pre>
+<p><strong>函数参数：</strong></p>
+<pre><code>QSPIFlashHandle：QSPI flash驱动的句柄
+</code></pre>
+<p><strong>函数返回值：</strong></p>
+<pre><code>无
+</code></pre>
+<h4 id="qspiflash-sectorerase">QSPIFlash_sectorErase</h4>
+<p><strong>函数原型：</strong></p>
+<pre><code>int32_t QSPIFlash_sectorErase(QSPIFlash_Handle QSPIFlashHandle,
+                              uint32_t addr 
+                              )		
+</code></pre>
+<p><strong>函数功能：</strong></p>
+<p>该函数擦除一个flash扇区</p>
+<p><strong>函数参数：</strong></p>
+<pre><code>QSPIFlashHandle：QSPI flash驱动的句柄
+addr：内存映射读的模式
+</code></pre>
+<p><strong>函数返回值：</strong></p>
+<pre><code>函数执行成功返回值为0，当扇区擦除失败时返回值小于0
+</code></pre>
+<h4 id="qspiflash-blockerase">QSPIFlash_blockErase</h4>
+<p><strong>函数原型：</strong></p>
+<pre><code>int32_t QSPIFlash_blockErase(QSPIFlash_Handle QSPIFlashHandle,
+                              uint32_t addr 
+                              )		
+</code></pre>
+<p><strong>函数功能：</strong></p>
+<pre><code>该函数擦除一个64KB flash扇区
+</code></pre>
+<p><strong>函数参数：</strong></p>
+<pre><code>QSPIFlashHandle：QSPI flash驱动的句柄
+addr：内存映射读的模式
+</code></pre>
+<p><strong>函数返回值：</strong></p>
+<pre><code>函数执行成功返回值为0，当扇区擦除失败时返回值小于0
+</code></pre>
+<h4 id="qspiflash-chiperase">QSPIFlash_chipErase</h4>
+<p><strong>函数原型：</strong></p>
+<pre><code>int32_t QSPIFlash_chipErase(QSPIFlash_Handle QSPIFlashHandle)		
+</code></pre>
+<p><strong>函数功能：</strong></p>
+<pre><code>该函数擦除整个flash
+</code></pre>
+<p><strong>函数参数：</strong></p>
+<pre><code>QSPIFlashHandle：QSPI flash驱动的句柄
+</code></pre>
+<p><strong>函数返回值：</strong></p>
+<pre><code>函数执行成功返回值为0，当扇区擦除失败时返回值小于0
+</code></pre>
+<h4 id="qspiflash-init">QSPIFlash_init</h4>
+<p><strong>函数原型：</strong></p>
+<pre><code>void QSPIFlash_init(void)	
+</code></pre>
+<p><strong>函数功能：</strong></p>
+<pre><code>该函数初始化QSPI flash驱动
+</code></pre>
+<p><strong>函数参数：</strong></p>
+<pre><code>无
+</code></pre>
+<p><strong>函数返回值：</strong></p>
+<pre><code>无
+</code></pre>
+<h4 id="qspiflash-open">QSPIFlash_open</h4>
+<p><strong>函数原型：</strong></p>
+<pre><code>QSPIFlash_Handle QSPIFlash_open(QSPI_Handle QSPIHandle,
+                                int32_t * errCode 
+                                )	
+</code></pre>
+<p><strong>函数功能：</strong></p>
+<pre><code>该函数打开QSPI Flash驱动，能获取flash设备的信息
+</code></pre>
+<p><strong>函数参数：</strong></p>
+<pre><code>QSPIHandle：qspi的句柄
+errCode：执行该函数产生的错误码
+</code></pre>
+<p><strong>函数返回值：</strong></p>
+<pre><code>当函数执行成功后，返回值为QSPIFlash_Handle的句柄，当函数执行错误后，返回值为空指针
+</code></pre>
+<h4 id="qspiflash-close">QSPIFlash_close</h4>
+<p><strong>函数原型：</strong></p>
+<pre><code>int32_t QSPIFlash_close(QSPIFlash_Handle QSPIFlashHandle)	
+</code></pre>
+<p><strong>函数功能：</strong></p>
+<pre><code>该函数用于关闭QSPI Flash驱动程序和驱动程序所使用的资源
+</code></pre>
+<p><strong>函数参数：</strong></p>
+<pre><code>QSPIFlashHandle：QSPI flash驱动的句柄
+</code></pre>
+<p><strong>函数返回值：</strong></p>
+<pre><code>当函数执行成功后返回值为0，当函数执行失败时返回值小于0
+</code></pre>
+<h4 id="qspiflash-getextflashaddr">QSPIFlash_getExtFlashAddr</h4>
+<p><strong>函数原型：</strong></p>
+<pre><code>int32_t QSPIFlash_getExtFlashAddr(QSPIFlash_Handle QSPIFlashHandle)
+</code></pre>
+<p><strong>函数功能：</strong></p>
+<pre><code>该函数获取外部flash的基地址
+</code></pre>
+<p><strong>函数参数：</strong></p>
+<pre><code>QSPIFlashHandle：QSPI flash驱动的句柄
+</code></pre>
+<p><strong>函数返回值：</strong></p>
+<pre><code>返回值为外部flash的地址
+</code></pre>
+<h4 id="qspiflash-sysdmawrite">QSPIFlash_sysDmaWrite</h4>
+<p><strong>函数原型：</strong></p>
+<pre><code>int32_t QSPIFlash_sysDmaWrite(QSPIFlash_Handle QSPIFlashHandle,
+                                DMA_Handle dmaHandle,
+                                uint32_t dmaChan,
+                                uint32_t srcAddr,
+                                uint32_t dstAddr,
+                                uint32_t dataLen 
+                                )	
+</code></pre>
+<p><strong>函数功能：</strong></p>
+<pre><code>该函数设置DMA写，并且传输用户缓存数据到flash
+</code></pre>
+<p><strong>函数参数：</strong></p>
+<pre><code>QSPIFlashHandle：QSPI flash驱动的句柄
+dmaHandle：dma驱动的句柄
+dmaChan：DMA通道
+srcAddr：用于写入操作的缓冲区地址，地址应双字节对齐
+dstAddr：写入操作的flash地址，地址应双字节对齐
+dataLen：DMA读的数据长度，以双字节为单位
+</code></pre>
+<p><strong>函数返回值：</strong></p>
+<pre><code>当函数执行成功后返回值为0，当函数执行失败后返回值小于0
+</code></pre>
+<h4 id="qspiflash-sysdmaread">QSPIFlash_sysDmaRead</h4>
+<p><strong>函数原型：</strong></p>
+<pre><code>int32_t QSPIFlash_sysDmaRead(QSPIFlash_Handle QSPIFlashHandle,
+                                DMA_Handle dmaHandle,
+                                uint32_t dmaChan,
+                                uint32_t srcAddr,
+                                uint32_t dstAddr,
+                                uint32_t dataLen 
+                                )	
+</code></pre>
+<p><strong>函数功能：</strong></p>
+<p>该函数设置DMA读</p>
+<p><strong>函数参数：</strong></p>
+<pre><code>QSPIFlashHandle：QSPI flash驱动的句柄
+dmaHandle：dma驱动的句柄
+dmaChan：DMA通道
+srcAddr：用于写入操作的缓冲区地址，地址应双字节对齐
+dstAddr：写入操作的flash地址，地址应双字节对齐
+dataLen：DMA读的数据长度，以双字节为单位
+</code></pre>
+<p><strong>函数返回值：</strong></p>
+<pre><code>当函数执行成功后返回值为0，当函数执行失败后返回值小于0
+</code></pre>
+<h1>代码案例</h1>
+<h2 id="gpio复用">GPIO复用</h2>
+<p>硬件电路原理图如下图所示，在硬件上关于flash GPIO的PIN脚共有6个，R12复用为QSPI的时钟线，P11复用为QSPI的时钟线，R13复用QSPI_D0的数据线，N12复用为QSPI_D1的数据线，R14复用为QSPI_D2的数据线，P12复用为QSPI_D3的数据线</p>
+<img src="/2025/04/25/radar/TI/flash/qspi%20flash/2.png" class="" title="放置图片">
+<img src="/2025/04/25/radar/TI/flash/qspi%20flash/3.png" class="" title="放置图片">
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">Pinmux_Set_OverrideCtrl(SOC_XWR68XX_PINR12_PADAP, PINMUX_OUTEN_RETAIN_HW_CTRL, PINMUX_INPEN_RETAIN_HW_CTRL);</span><br><span class="line">Pinmux_Set_FuncSel(SOC_XWR68XX_PINR12_PADAP, SOC_XWR68XX_PINR12_PADAP_QSPI_CLK);</span><br><span class="line"></span><br><span class="line">Pinmux_Set_OverrideCtrl(SOC_XWR68XX_PINP11_PADAQ, PINMUX_OUTEN_RETAIN_HW_CTRL, PINMUX_INPEN_RETAIN_HW_CTRL);</span><br><span class="line">Pinmux_Set_FuncSel(SOC_XWR68XX_PINP11_PADAQ, SOC_XWR68XX_PINP11_PADAQ_QSPI_CSN);</span><br><span class="line"></span><br><span class="line">Pinmux_Set_OverrideCtrl(SOC_XWR68XX_PINR13_PADAL, PINMUX_OUTEN_RETAIN_HW_CTRL, PINMUX_INPEN_RETAIN_HW_CTRL);</span><br><span class="line">Pinmux_Set_FuncSel(SOC_XWR68XX_PINR13_PADAL, SOC_XWR68XX_PINR13_PADAL_QSPI_D0);</span><br><span class="line"></span><br><span class="line">Pinmux_Set_OverrideCtrl(SOC_XWR68XX_PINN12_PADAM, PINMUX_OUTEN_RETAIN_HW_CTRL, PINMUX_INPEN_RETAIN_HW_CTRL);</span><br><span class="line">Pinmux_Set_FuncSel(SOC_XWR68XX_PINN12_PADAM, SOC_XWR68XX_PINN12_PADAM_QSPI_D1);</span><br><span class="line"></span><br><span class="line">Pinmux_Set_OverrideCtrl(SOC_XWR68XX_PINR14_PADAN, PINMUX_OUTEN_RETAIN_HW_CTRL, PINMUX_INPEN_RETAIN_HW_CTRL);</span><br><span class="line">Pinmux_Set_FuncSel(SOC_XWR68XX_PINR14_PADAN, SOC_XWR68XX_PINR14_PADAN_QSPI_D2);</span><br><span class="line"></span><br><span class="line">Pinmux_Set_OverrideCtrl(SOC_XWR68XX_PINP12_PADAO, PINMUX_OUTEN_RETAIN_HW_CTRL, PINMUX_INPEN_RETAIN_HW_CTRL);</span><br><span class="line">Pinmux_Set_FuncSel(SOC_XWR68XX_PINP12_PADAO, SOC_XWR68XX_PINP12_PADAO_QSPI_D3);</span><br></pre></td></tr></table></figure>
+<h2 id="qspi和qspi-flash初始化">qspi和qspi flash初始化</h2>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">QSPI_init();</span><br><span class="line">QSPIFlash_init();</span><br></pre></td></tr></table></figure>
+<h2 id="qspi和qspi-flash打开">qspi和qspi flash打开</h2>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">int32_t errCode;</span><br><span class="line">QSPI_Params QSPIParams;</span><br><span class="line">/* Open QSPI driver */</span><br><span class="line">QSPI_Params_init(&amp;QSPIParams);</span><br><span class="line"></span><br><span class="line">/* Set the QSPI peripheral clock to 200MHz */</span><br><span class="line">QSPIParams.qspiClk = 200 * 1000000U;</span><br><span class="line">QSPIParams.clkMode = QSPI_CLOCK_MODE_0;</span><br><span class="line">/* Running at 40MHz QSPI bit rate</span><br><span class="line">* QSPI bit clock rate derives from QSPI peripheral clock(qspiClk)</span><br><span class="line">    and divide clock internally down to bit clock rate</span><br><span class="line">    BitClockRate = qspiClk/divisor(=5, setup by QSPI driver internally)</span><br><span class="line">*/</span><br><span class="line">QSPIParams.bitRate = 40 * 1000000U;</span><br><span class="line">qspiHandle = QSPI_open(&amp;QSPIParams, &amp;errCode);</span><br><span class="line">if (qspiHandle == NULL)</span><br><span class="line">&#123;</span><br><span class="line">    return 0;</span><br><span class="line">&#125;</span><br><span class="line">qspiFlashHandle = QSPIFlash_open(qspiHandle, &amp;errCode);</span><br><span class="line">if (qspiFlashHandle == NULL )</span><br><span class="line">&#123;</span><br><span class="line">    return 0;</span><br><span class="line">&#125;</span><br><span class="line">return 1;</span><br></pre></td></tr></table></figure>
+<h2 id="flash写入数据">flash写入数据</h2>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">int32_t retVal;</span><br><span class="line">//erase</span><br><span class="line">retVal = QSPIFlash_sectorErase(qspiFlashHandle, flashOffset);</span><br><span class="line"></span><br><span class="line"> /* Configure in write read mode */</span><br><span class="line"> QSPIFlash_configMmapWrite(qspiFlashHandle);</span><br><span class="line"></span><br><span class="line"> //write</span><br><span class="line"> retVal = QSPIFlash_mmapWrite(qspiFlashHandle,</span><br><span class="line">                              (const uint32_t *)(flashOffset + QSPIFlash_getExtFlashAddr(qspiFlashHandle)),</span><br><span class="line">                              (size +7U)/8U,</span><br><span class="line">                              writeBuf);</span><br><span class="line"> return retVal;</span><br></pre></td></tr></table></figure>
+<h2 id="flash读取数据">flash读取数据</h2>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">uint32_t retVal = 0;</span><br><span class="line">//config qspiFlash read mode</span><br><span class="line">if(QSPIFlash_configMmapRead(qspiFlashHandle, FLASH_AUTO_MODE, &amp;retVal) &lt; 0)</span><br><span class="line">&#123;</span><br><span class="line">    retVal = -1;</span><br><span class="line">&#125;</span><br><span class="line">//read from QSPI flash in memory mapped mode</span><br><span class="line">retVal = QSPIFlash_mmapRead(qspiFlashHandle,</span><br><span class="line">                           (const uint32_t *)(flashOffset + QSPIFlash_getExtFlashAddr(qspiFlashHandle)),</span><br><span class="line">                           (size +7U)/8U,</span><br><span class="line">                           readBuf);</span><br><span class="line">return retVal;</span><br></pre></td></tr></table></figure>
+<h1>参考文献</h1>
+<ol>
+<li>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/wangguchao/article/details/105593303">基础——SPI与QSPI的异同，QSPI的具体协议是什么，QSPI有什么用</a></p>
+</li>
+<li>
+<p>TI SDK驱动库(mmwave_sdk_03_05_00_04\packages\ti\drivers\qspi)</p>
+</li>
+<li>
+<p>TI SDK驱动库(mmwave_sdk_03_05_00_04\packages\ti\drivers\qspiflash)</p>
+</li>
+</ol>
+
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
+
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
+    <link itemprop="mainEntityOfPage" href="https://xxiaojie.github.io/2025/04/25/radar/TI/IIC/IIC%20driver/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/xiaojie.png">
+      <meta itemprop="name" content="xiaojie">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="xiaojie雷达说">
+      <meta itemprop="description" content="分享雷达知识">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content=" | xiaojie雷达说">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          <a href="/2025/04/25/radar/TI/IIC/IIC%20driver/" class="post-title-link" itemprop="url">IIC driver</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+      
+
+      <time title="创建时间：2025-04-25 23:19:14 / 修改时间：20:55:50" itemprop="dateCreated datePublished" datetime="2025-04-25T23:19:14+08:00">2025-04-25</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/radar/" itemprop="url" rel="index"><span itemprop="name">radar</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/radar/TI/" itemprop="url" rel="index"><span itemprop="name">TI</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-break"></span>
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>6.6k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>6 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <p>Hello，大家好，我是Xiaojie，好久不见，欢迎大家能够和Xiaojie一起学习毫米波雷达知识，这篇文章主要是介绍IIC的基本知识以及TI SDK中的IIC驱动。</p>
+<p>本文IIC的基础知识可参考文章《基础通信协议之 IIC (I2C) 详细讲解》</p>
+<h1>基础知识</h1>
+<h2 id="简介">简介</h2>
+<p>IIC(Inter-Integrated Circuit)是IIC Bus简称，中文叫集成电路总线，是一种串行通信总线。</p>
+<p>IIC总线使用两根信号线进行通信：一根时钟线SCL，一根数据线SDA。</p>
+<p>开始信号：SCL处于高时，SDA拉低的动作</p>
+<p>结束信号：SCL处于高时，SDA拉高的动作</p>
+<p>传输数据时，SDA在SCL低电平时改变数据，在SCL高电平时保持数据，每个SCL脉冲的高电平传递1位数据</p>
+<h2 id="主要特性">主要特性</h2>
+<ul>
+<li>
+<p>IIC用两根信号线通信：串行数据线SDA，串行时钟线SCL；</p>
+</li>
+<li>
+<p>IIC总线上所有器件的SDA、SCL引脚输出驱动都为开漏结构，通过外接上拉电阻实现总线上所有节点SDA<br>
+、SCL信号的线与逻辑关系</p>
+</li>
+<li>
+<p>IIC总线上的从机设备的地址是唯一的，有7位地址定义和10位地址定义。</p>
+</li>
+<li>
+<p>IIC总线在任何时刻只存在简单的主从关系，按数据传输的方向，主机可以是主发送器或主接收器</p>
+</li>
+<li>
+<p>IIC总线支持多主机，在总线上存在多个主机时，通过冲突检测和仲裁机制防止多个主机同时发起数据传输时存在的冲突</p>
+</li>
+<li>
+<p>IIC总线上所有的器件都具有&quot;自动应答&quot;的功能，保证数据传输的正确性；主机和从机的区别在于对SCL的发送权，只有主机才能发送SCL</p>
+</li>
+</ul>
+<h2 id="硬件结构">硬件结构</h2>
+<h3 id="总线结构">总线结构</h3>
+<p>IIC使用时钟线SCL和数据线SDA进行通信，且两根线上都要接上拉电阻使总线处于高电平状态，如下图为TI IWR6843的对IIC总线上接的上拉电阻。</p>
+<img src="/2025/04/25/radar/TI/IIC/IIC%20driver/1.png" class="" title="放置图片">
+<p>上拉电阻的取值有一定的要求，电阻太小会导致灌入电流过大，使低数据不稳定，甚至损坏端口；太大会导致信号上升缓慢，使得数据传输出错。</p>
+<p>线与逻辑使得总线上不会出现数据冲突，实现了总线的仲裁控制，总线的控制权会交给最后一个输出低电平的设备，其他设备(输出高)通过检测总线上的电平状态(状态低)，对比与自己输出状态不一致，则自动退出对总线的控制请求，从而防止了总线上的数据冲突。</p>
+<h3 id="总线的拉高和拉低">总线的拉高和拉低</h3>
+<p>总线拉低：设备的逻辑电路控制FET打开，总线通过导通的FET连接到GND从而被拉低</p>
+<p>总线拉高：设备的逻辑电路控制FET关闭，总线通过上拉电阻连接到VCC从而被拉高</p>
+<img src="/2025/04/25/radar/TI/IIC/IIC%20driver/2.png" class="" title="放置图片">
+<h2 id="工作时序">工作时序</h2>
+<h3 id="数据有效性">数据有效性</h3>
+<p>IIC的数据读取动作都是在SCL为高时产生的，SCL为低时是数据改变的时期，无论SDA如何变化都不影响读取。所以，传输数据的过程中，当SCL为高是，数据应当保持稳定，避免数据采集出错。</p>
+<img src="/2025/04/25/radar/TI/IIC/IIC%20driver/3.png" class="" title="放置图片">
+<h3 id="开始信号和结束信号">开始信号和结束信号</h3>
+<p>开始信号：当SCL为高时，SDA从高到低的跳变产生开始信号</p>
+<p>结束信号：当SCL为高时，SDA从低到高的跳变产生结束信号</p>
+<img src="/2025/04/25/radar/TI/IIC/IIC%20driver/4.png" class="" title="放置图片">
+<h3 id="重复开始信号">重复开始信号</h3>
+<p>重复开始信号：在结束时不给出STOP信号，而以一个时钟周期内再次给出开始信号作为替代</p>
+<h3 id="字节格式">字节格式</h3>
+<p>SDA数据线上的每个字节必须是8位，对于每次传输的字节数没有限制，每个字节(8位)数据传输完毕后紧跟着应答信号(ACK，第9位)。数据的先后顺序位：高位在前。</p>
+<img src="/2025/04/25/radar/TI/IIC/IIC%20driver/5.png" class="" title="放置图片">
+<h3 id="应答信号">应答信号</h3>
+<p>协议规定数据传输过程必须包含应答(ACK)。接收器通过应答告知发送的字节已被成功接收，之后发送器可以进行下一个字节的传输。主机产生数据传输过程中的所有时钟，包括用于应答的第九个时钟。发送器在应答时钟周期内释放对SDA总线的控制，这样接收器可以通过将SDA线拉低告知发送器，数据已被成功接收。</p>
+<p>应答信号分为两种：</p>
+<ol>
+<li>
+<p>当第9位(应答位)为低电平时，为ACK(Acknowledge)信号</p>
+</li>
+<li>
+<p>当第9位(应答位)为高电平时，为NACK(Not Acknowledge)信号</p>
+</li>
+</ol>
+<p>主机发送数据时，从机接收时，ACK信号由从机发出。当在SCL第9位时钟高电平信号期间，如果SDA仍然保持高电平，则主机可以直接产生STOP条件终止以后的传输或者继续ReSTART开始一个新的传输</p>
+<p>从机发送数据时，主机读取数据时，ACK信号由主机给出，主机响应ACK表示还需要接收再接收数据，而当主机主机接受完想要的数据后，通过发送NACK告诉从机读取数据结束，释放总线。随机主机发送STOP命令，将总线释放，结束读操作、</p>
+<img src="/2025/04/25/radar/TI/IIC/IIC%20driver/6.png" class="" title="放置图片">
+<h2 id="设备的地址">设备的地址</h2>
+<h3 id="7-bit设备的数据传输">7-bit设备的数据传输</h3>
+<p>一个完整的7-bit通信过程如图所示：</p>
+<img src="/2025/04/25/radar/TI/IIC/IIC%20driver/7.png" class="" title="放置图片">
+<p>在START信号后的首字节由7位从机地址和1位读写位组成，结构如下图：</p>
+<img src="/2025/04/25/radar/TI/IIC/IIC%20driver/8.png" class="" title="放置图片">
+<p>发送完这个字节之后，主机释放SDA总线等待从机给出ACK应答，如果从机给出了ACK应答，表示从机地址正确并且已知晓是读还是写，便可以开始读写数据。如果从机没有没出给出ACK应答，则说明接收设备可能没有收到数据(如寻址的设备不存在或是设备正在忙)或无法解析收到的数据。</p>
+<h3 id="10-bit设备的数据传输">10-bit设备的数据传输</h3>
+<p>随着IIC设备日益增多，7位的从机地址逐渐不能满足使用，于是从机地址从7位扩充到10位。7位和10位地址的设备可以共存于同一个IIC总线系统互不冲突，展现了良好的兼容性。</p>
+<p>10-bit地址的IIC设备需要2字节来传输从设备的地址信息，所以采用了这样的设计：第一个字节位1111 0+地址高两位(第10、9bit)+读写控制位，第二个字节位位从设备地址低8位，除此之外与7-bit设备相同。因为&quot;1111 0xx&quot;为IIC中特定保留的16个特殊指令地址中的一个，所以7-bit设备不会响应该首字节的呼叫，只有10-bit设备会响应，从而实现良好兼容。</p>
+<h4 id="10-bit设备的写">10-bit设备的写</h4>
+<img src="/2025/04/25/radar/TI/IIC/IIC%20driver/9.png" class="" title="放置图片">
+<h4 id="10-bit设备的读">10-bit设备的读</h4>
+<img src="/2025/04/25/radar/TI/IIC/IIC%20driver/10.png" class="" title="放置图片">
+<h1>TI驱动以及函数代码实现</h1>
+<h2 id="ti驱动代码">TI驱动代码</h2>
+<h3 id="i2c-init">I2C_init</h3>
+<p><strong>函数原型：</strong></p>
+<pre><code>void 	I2C_init (void)	
+</code></pre>
+<p><strong>函数功能：</strong></p>
+<pre><code>初始化IIC模块
+</code></pre>
+<p><strong>函数参数：</strong></p>
+<pre><code>无
+</code></pre>
+<p><strong>函数返回值：</strong></p>
+<pre><code>无
+</code></pre>
+<h3 id="i2c-params-init">I2C_Params_init</h3>
+<p><strong>函数原型：</strong></p>
+<pre><code>void 	I2C_Params_init (I2C_Params *params)
+</code></pre>
+<p><strong>函数功能：</strong></p>
+<pre><code>将I2C_Params结构体初始化为默认值
+</code></pre>
+<p><strong>函数参数：</strong></p>
+<pre><code>params：指向I2C_Params指针，用于初始化
+</code></pre>
+<p><strong>函数返回值：</strong></p>
+<pre><code>无
+</code></pre>
+<h3 id="i2c-open">I2C_open</h3>
+<p><strong>函数原型：</strong></p>
+<pre><code>I2C_Handle 	I2C_open (uint32_t index, I2C_Params *params)
+</code></pre>
+<p><strong>函数功能：</strong></p>
+<pre><code>初始化由特定索引值指定的给定I2C外围设备。且params指定I2C的运行模式
+</code></pre>
+<p><strong>函数参数：</strong></p>
+<pre><code>index：索引到I2C_config表中的I2C逻辑外设编号
+params：指向参数块的指针。如果指定NULL，将使用默认值。此结构中的所有字段都被视为只读
+</code></pre>
+<p><strong>函数返回值：</strong></p>
+<pre><code>当函数执行成功时，返回I2C的句柄，当函数执行失败时，返回NULL值
+</code></pre>
+<h3 id="i2c-control">I2C_control</h3>
+<p><strong>函数原型：</strong></p>
+<pre><code>int32_t I2C_control(I2C_Handle 	handle,
+                    uint32_t 	cmd,
+                    void * 	arg 
+                    )	
+</code></pre>
+<p><strong>函数功能：</strong></p>
+<pre><code>在给定的I2C_Handle执行特定功能的实现
+
+I2C_control的命令可以来自I2C.h或特定于实现的I2C.h文件。
+
+虽然来自I2C.h的命令在驱动程序实现中是可以移植的，但并非所有实现都可以支持所有这些命令。
+
+相反，来自驱动程序实现特定的I2C.h文件的命令添加了独特的驱动程序功能，但并非API可移植到所有I2C驱动程序实现中
+
+I2C.h支持命令遵循I2C_CMD命令的约定。每个控制命令对arg的定义不同。每个命令都纪录了arg的类型
+</code></pre>
+<p><strong>函数参数：</strong></p>
+<pre><code>handle：I2C句柄
+
+cmd：I2C.h中的命令
+
+arg：cmd附带的可选R/W(du/写)命令参数
+</code></pre>
+<p><strong>函数返回值：</strong></p>
+<pre><code>实现特定的返回值。负值表示操作不成功
+</code></pre>
+<h3 id="i2c-transfer">I2C_transfer</h3>
+<p><strong>函数原型：</strong></p>
+<pre><code>bool I2C_transfer(I2C_Handle handle,
+                  I2C_Transaction * transaction 
+                  )	
+</code></pre>
+<p><strong>函数功能：</strong></p>
+<pre><code>与I2C从设备执行I2C传输。
+
+此函数将启动I2C传输，并且只能在I2C_MODE_BLOCKING中下调用。
+I2C传输过程中需要评估写入多少字节以及要从I2C外围设备读取多少字节。
+任务写入的数据都将在读取数据之前发送。
+
+写入外围设备的数据前面有外围设备的7为I2C从属地址(写入位)。
+在所有数据传输完毕后，驱动程序将评估是否需要从设备中读取任何数据。
+如果是这样，则会发送一个重新启动位，以及相同的7位I2C从机地址(读取位)。
+否则，传输STOP位结束。在I2C读取指定数量的字节后，传输以NACK和STOP位终止。
+
+在I2C_MODE_BLOCKING中，I2C_transfer将阻止任务执行，直到任务完成。
+</code></pre>
+<p><strong>函数参数：</strong></p>
+<pre><code>handle：I2C句柄
+
+transaction：指向I2C_Transcation的指针
+</code></pre>
+<p><strong>函数返回值：</strong></p>
+<pre><code>在I2C_MODE_BLOCKING中，传输成功后返回为true，错误后返回为false
+</code></pre>
+<h3 id="i2c-cancel">I2C_cancel</h3>
+<p><strong>函数原型：</strong></p>
+<pre><code>void I2C_cancel	(I2C_Handle 	handle)	
+</code></pre>
+<p><strong>函数功能：</strong></p>
+<pre><code>取消全部I2C传输
+</code></pre>
+<p><strong>函数参数：</strong></p>
+<pre><code>handle：I2C句柄
+</code></pre>
+<p><strong>函数返回值：</strong></p>
+<pre><code>无
+</code></pre>
+<h3 id="i2c-close">I2C_close</h3>
+<p><strong>函数原型：</strong></p>
+<pre><code>void I2C_close	(I2C_Handle 	handle)	
+</code></pre>
+<p><strong>函数功能：</strong></p>
+<pre><code>关闭I2C句柄指定的外围设备
+</code></pre>
+<p><strong>函数参数：</strong></p>
+<pre><code>handle：I2C句柄
+</code></pre>
+<p><strong>函数返回值：</strong></p>
+<pre><code>无
+</code></pre>
+<h2 id="代码案例">代码案例</h2>
+<h3 id="gpio复用">GPIO复用</h3>
+<p>硬件上PIN脚G14为SCL时钟线，PIN脚F13为SDA数据线，如下代码将G14复用为I2C_SCL线，将F13复用为I2C_SDA线</p>
+<img src="/2025/04/25/radar/TI/IIC/IIC%20driver/11.png" class="" title="放置图片">
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">/* Setup the PINMUX to I2C*/</span><br><span class="line">//sda</span><br><span class="line">Pinmux_Set_OverrideCtrl(SOC_XWR68XX_PINF13_PADAH, PINMUX_OUTEN_RETAIN_HW_CTRL, PINMUX_INPEN_RETAIN_HW_CTRL);</span><br><span class="line">Pinmux_Set_FuncSel(SOC_XWR68XX_PINF13_PADAH, SOC_XWR68XX_PINF13_PADAH_I2C_SDA);</span><br><span class="line">//scl</span><br><span class="line">Pinmux_Set_OverrideCtrl(SOC_XWR68XX_PING14_PADAI, PINMUX_OUTEN_RETAIN_HW_CTRL, PINMUX_INPEN_RETAIN_HW_CTRL);</span><br><span class="line">Pinmux_Set_FuncSel(SOC_XWR68XX_PING14_PADAI, SOC_XWR68XX_PING14_PADAI_I2C_SCL);</span><br></pre></td></tr></table></figure>
+<h3 id="i2c初始化">I2C初始化</h3>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">I2C_init();</span><br></pre></td></tr></table></figure>
+<h3 id="i2c打开">I2C打开</h3>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">I2C_Params i2cParams;</span><br><span class="line">uint32_t arg;</span><br><span class="line">int32_t errCode = 0;</span><br><span class="line">/* Initialize the I2C driver default parameters */</span><br><span class="line">I2C_Params_init(&amp;i2cParams);</span><br><span class="line"></span><br><span class="line">i2cParams.transferMode = I2C_MODE_BLOCKING;</span><br><span class="line">i2cParams.bitRate = I2C_100kHz;</span><br><span class="line"></span><br><span class="line">/* Open the I2C driver */</span><br><span class="line">i2cHandle = I2C_open(0, &amp;i2cParams);</span><br><span class="line"></span><br><span class="line">if (i2cHandle == NULL)</span><br><span class="line">&#123;</span><br><span class="line">    System_printf (&quot;i2cHandle is null \n&quot;);</span><br><span class="line">    return -1;</span><br><span class="line">&#125;</span><br><span class="line">arg = 0;//arg set to 0, and the I2C addr mode is 7-bit.</span><br><span class="line">errCode = I2C_control (i2cHandle, I2C_CMD_ADDR_MODE, (void* )&amp;arg);</span><br><span class="line">if (errCode &lt; 0)</span><br><span class="line">&#123;</span><br><span class="line">    System_printf (&quot;Error: I2C control Set I2C_CMD_ADDR_MODE failed [Error code %d]\n&quot;, errCode);</span><br><span class="line">    return -1;</span><br><span class="line">&#125;</span><br><span class="line">else</span><br><span class="line">&#123;</span><br><span class="line">    System_printf (&quot;I2C_control success\n&quot;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="i2c写数据">I2C写数据</h3>
+<p>写单个字节</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">/*</span><br><span class="line"> * 写一个字节</span><br><span class="line"> * slaveAddress:从机地址</span><br><span class="line"> * addr:从机内部地址</span><br><span class="line"> * data:要往从机内部地址写入的数据</span><br><span class="line"> * */</span><br><span class="line">int8_t iicWriteOneByte(uint32_t slaveAddress,uint8_t addr,uint8_t data)</span><br><span class="line">&#123;</span><br><span class="line">    int8_t retVal;</span><br><span class="line">    I2C_Transaction i2cTransaction;</span><br><span class="line">    uint8_t txData[2];</span><br><span class="line">    txData[0] = addr;txData[1] = data;</span><br><span class="line">    i2cTransaction.slaveAddress = slaveAddress;//LP87524B/J-Q1 Device Address = 0x60</span><br><span class="line">    i2cTransaction.writeBuf = txData;</span><br><span class="line">    i2cTransaction.writeCount = 2;</span><br><span class="line">    i2cTransaction.readBuf = NULL;</span><br><span class="line">    i2cTransaction.readCount = 0;</span><br><span class="line">    retVal = I2C_transfer(i2cHandle, &amp;i2cTransaction);</span><br><span class="line">    return retVal;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>写多个字节</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">/*</span><br><span class="line"> * 写多个字节</span><br><span class="line"> * */</span><br><span class="line">int8_t iicWriteData(uint32_t slaveAddress,uint8_t addr,uint8_t * data,uint16_t size)</span><br><span class="line">&#123;</span><br><span class="line">    uint16_t index;</span><br><span class="line">    int8_t retVal;</span><br><span class="line">    for (index = 0; index &lt; size; index++)</span><br><span class="line">    &#123;</span><br><span class="line">        retVal = YIECT_iicWriteOneByte(slaveAddress,addr,*data); //写入</span><br><span class="line">        addr++;data++; //地址和要写入的数据的地址均++</span><br><span class="line">    &#125;</span><br><span class="line">    return retVal;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="i2c读数据">I2C读数据</h3>
+<p>读一个字节</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">/*</span><br><span class="line"> * 读一个字节</span><br><span class="line"> * slaveAddress:从机地址</span><br><span class="line"> * addr:从机内部地址</span><br><span class="line"> * data:读出的数据</span><br><span class="line"> * */</span><br><span class="line">int8_t iicReadOneByte(uint32_t slaveAddress,uint8_t addr,uint8_t * data)</span><br><span class="line">&#123;</span><br><span class="line">    int8_t retVal;</span><br><span class="line">    I2C_Transaction i2cTransaction;</span><br><span class="line">    uint8_t txData[1];</span><br><span class="line">    txData[0] = addr;</span><br><span class="line">    i2cTransaction.slaveAddress = slaveAddress;//LP87524B/J-Q1 Device Address = 0x60</span><br><span class="line">    i2cTransaction.writeBuf = txData;</span><br><span class="line">    i2cTransaction.writeCount = 1;</span><br><span class="line">    i2cTransaction.readBuf = data;</span><br><span class="line">    i2cTransaction.readCount = 1;</span><br><span class="line">    retVal = I2C_transfer(i2cHandle, &amp;i2cTransaction);</span><br><span class="line">    return retVal;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>读多个字节</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">/*</span><br><span class="line"> * 读多个字节</span><br><span class="line"> * */</span><br><span class="line">int8_t iicReadData(uint32_t slaveAddress,uint8_t addr,uint8_t * data,uint16_t size)</span><br><span class="line">&#123;</span><br><span class="line">    int8_t retVal;</span><br><span class="line">    uint16_t index;</span><br><span class="line">    for (index = 0; index &lt; size; index++)</span><br><span class="line">    &#123;</span><br><span class="line">        retVal = YIECT_iicReadOneByte(slaveAddress,addr,data); //读出</span><br><span class="line">        addr++;data++; //地址和要写入的数据的地址均++</span><br><span class="line">    &#125;</span><br><span class="line">    return retVal;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1>参考文献</h1>
+<ol>
+<li>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_39829913/article/details/104718185">基础通信协议之 IIC (I2C) 详细讲解</a></p>
+</li>
+<li>
+<p>TI SDK驱动库(mmwave_sdk_03_05_00_04\packages\ti\drivers\i2c)</p>
+</li>
+</ol>
+
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
 
     
 
@@ -1315,14 +2324,14 @@ chirp数量：384，
       <i class="fa fa-chart-line"></i>
     </span>
       <span>站点总字数：</span>
-    <span title="站点总字数">39k</span>
+    <span title="站点总字数">55k</span>
   </span>
   <span class="post-meta-item">
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
       <span>站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">35 分钟</span>
+    <span title="站点阅读时长">50 分钟</span>
   </span>
 </div>
 <div class="busuanzi-count">
